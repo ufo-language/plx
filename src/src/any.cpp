@@ -19,14 +19,14 @@ namespace plx {
         return stream;
     }
 
-    bool Any::equalTo(Any* other) {
-        if (this == other) {
+    bool Any::equalTo(Any* self, Any* other) {
+        if (self == other) {
             return true;
         }
-        if (this->_typeId != other->_typeId) {
+        if (self->_typeId != other->_typeId) {
             return false;
         }
-        return this->equalTo(other);
+        return self->isEqual(other);
     }
 
     EvaluatorStatus Any::evaluate(Evaluator* etor) {
@@ -34,8 +34,13 @@ namespace plx {
         return ES_Running;
     }
 
+    bool Any::isEqual(Any* other) {
+        (void)other;
+        return false;
+    }
+
     Triple* Any::match(Any* other, Triple* env) {
-        return equalTo(other) ? env : nullptr;
+        return Any::equalTo(this, other) ? env : nullptr;
     }
 
 }

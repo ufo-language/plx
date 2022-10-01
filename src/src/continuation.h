@@ -4,6 +4,8 @@
 
 namespace plx {
 
+    struct List;
+
     typedef EvaluatorStatus (*ContinFun)(Evaluator *etor, Any* arg);
 
     struct Continuation : public Any {

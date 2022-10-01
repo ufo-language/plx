@@ -6,7 +6,7 @@
 
 namespace plx {
 
-    class Evaluator;
+    struct Evaluator;
 
     typedef EvaluatorStatus (*PrimFun)(Evaluator *etor);
 

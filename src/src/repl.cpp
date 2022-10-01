@@ -7,6 +7,7 @@
 #include "src/evaluator.h"
 #include "src/list.h"
 #include "src/parser.h"
+#include "src/primitives.h"
 #include "src/repl.h"
 
 namespace plx {
@@ -18,6 +19,7 @@ namespace plx {
 
     int REPL::loop(void) {
         Evaluator* etor = new Evaluator();
+        prim_defineAll(etor);
         while (true) {
             printf("plx> ");
             std::string line;

@@ -2,7 +2,7 @@
 
 namespace plx {
 
-    class Evaluator;
+    struct Evaluator;
 
     void prim_defineAll(Evaluator* etor);
 

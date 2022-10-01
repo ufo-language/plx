@@ -16,4 +16,9 @@ namespace plx {
         return ES_Running;
     }
 
+    bool Symbol::isEqual(Any* other) {
+        Symbol* otherSym = (Symbol*)other;
+        return _name == otherSym->_name;
+    }
+
 }

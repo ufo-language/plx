@@ -5,9 +5,10 @@ namespace plx {
     Triple* Triple::locate(Any* name) {
         Triple* triple = this;
         while (!triple->isEmpty()) {
-            if (triple->_key->equalTo(name)) {
+            if (Any::equalTo(triple->_key, name)) {
                 return triple;
             }
+            triple = triple->_next;
         }
         return nullptr;
     }

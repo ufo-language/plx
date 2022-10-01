@@ -12,6 +12,7 @@ namespace plx {
         Any* _rest;
         EvaluatorStatus evaluate(Evaluator* etor);
         bool isEmpty() { return _first == nullptr; }
+        bool isEqual(Any* other);
         List* reverse();
         void show(std::ostream& stream) override;
         void showWith(std::ostream& stream, const std::string& open, const std::string& close);

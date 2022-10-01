@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "src/any.h"
+#include "src/apply.h"
 #include "src/integer.h"
 #include "src/list.h"
 #include "src/queue.h"
@@ -41,11 +42,11 @@ namespace plx {
         int iValue = 0;
         int rFrac = 0;
         int rDivisor = 1;
+        bool parsingApplication = false;
         Any* token;
         while (contin) {
             char c = inputString[index++];
             //std::cout << "_parse state = " << parseState << ", c = '" << c << "', lexeme = '" << lexeme.str() << "'\n";
-
             switch (parseState) {
                 case PS_Init:
                     if (c == '\0') { contin = false; }
@@ -64,8 +65,32 @@ namespace plx {
                         exprStack = (List*)exprStack->_rest;
                         goto MAKE_TOKEN;
                     }
+                    else if (c == '.') {
+                        exprStack = new List(expr, exprStack);
+                        expr = new Queue();
+                        lexeme = std::stringstream();
+                        parsingApplication = true;
+                    }
+                    else if (c == ';') {
+                        if (!parsingApplication) {
+                            std::cerr << "PS_Init ending semicolon with no starting dot\n";
+                            return nullptr;
+                        }
+                        if (expr->_count == 0) {
+                            std::cerr << "PS_Init empty application\n";
+                            return nullptr;
+                        }
+                        Any* abstr = expr->_first->_first;
+                        List* appArgs = (List*)expr->_first->_rest;
+                        token = new Apply(abstr, appArgs);
+                        expr = (Queue*)exprStack->_first;
+                        exprStack = (List*)exprStack->_rest;
+                        parsingApplication = false;
+                        goto MAKE_TOKEN;
+                    }
                     else {
                         std::cerr << "PS_Init unhandled character '" << c << "'\n";
+                        return nullptr;
                     }
                     break;
                 case PS_Integer:

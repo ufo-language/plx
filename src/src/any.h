@@ -9,7 +9,7 @@ namespace plx {
 
     enum TypeId {
         T_NULL = 0,
-        T_Application,
+        T_Apply,
         T_Array,
         T_Boolean,
         T_Continuation,
@@ -47,7 +47,8 @@ namespace plx {
         Any* _next;
         bool _isMarked;
         virtual void display(std::ostream& stream) { show(stream); }
-        virtual bool equalTo(Any* other);
+        static bool equalTo(Any* self, Any* other);
+        virtual bool isEqual(Any* other);
         virtual EvaluatorStatus evaluate(Evaluator* etor);
         virtual Triple* match(Any* other, Triple* env);
         virtual void show(std::ostream& stream) = 0;

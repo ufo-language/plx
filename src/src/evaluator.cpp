@@ -9,7 +9,6 @@ namespace plx {
 
     Evaluator::Evaluator()
         : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()}, _exception{nullptr} {
-        prim_defineAll(this);
     }
 
     void Evaluator::bind(Any* name, Any* value) {
@@ -106,6 +105,7 @@ namespace plx {
     }
 
     void Evaluator::pushExpr(Any* expr) {
+        assert(expr != nullptr);
         _estack = new Triple(expr, _env, _estack);
     }
 
@@ -128,10 +128,10 @@ namespace plx {
 
     EvaluatorStatus Evaluator::step() {
         Any* expr = popExpr();
-        std::cout << "Evaluator::step expr = " << expr << "\n";
         if (expr == nullptr) {
             return ES_Terminated;
         }
+        std::cout << "Evaluator::step expr = " << expr << "\n";
         return expr->evaluate(this);
     }
 
