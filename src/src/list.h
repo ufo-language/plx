@@ -10,6 +10,7 @@ namespace plx {
         List(Any* first, Any* rest) : Any{T_List}, _first{first}, _rest{rest} {}
         Any* _first;
         Any* _rest;
+        bool boolValue() { return !isEmpty(); }
         EvaluatorStatus evaluate(Evaluator* etor);
         bool isEmpty() { return _first == nullptr; }
         bool isEqual(Any* other);

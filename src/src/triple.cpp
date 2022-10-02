@@ -5,7 +5,7 @@ namespace plx {
     Triple* Triple::locate(Any* name) {
         Triple* triple = this;
         while (!triple->isEmpty()) {
-            if (Any::equalTo(triple->_key, name)) {
+            if (Any::IsEqual(triple->_key, name)) {
                 return triple;
             }
             triple = triple->_next;

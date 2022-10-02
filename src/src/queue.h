@@ -13,6 +13,7 @@ namespace plx {
         List* _first;
         List* _last;
         int _count;
+        bool boolValue() override { return _count > 0; }
         void enq(Any* elem);
         void deq(Evaluator* etor);
         Any* deq_unsafe();

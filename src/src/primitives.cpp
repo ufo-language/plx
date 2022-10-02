@@ -1,3 +1,4 @@
+#include "src/any.h"
 #include "src/continuation.h"
 #include "src/evaluator.h"
 #include "src/list.h"
@@ -10,6 +11,7 @@ namespace plx {
 
     static EvaluatorStatus prim_disp(Evaluator* etor);
     static EvaluatorStatus prim_do(Evaluator* etor);
+    static EvaluatorStatus prim_if(Evaluator* etor);
     static EvaluatorStatus prim_let(Evaluator* etor);
     static EvaluatorStatus prim_quote(Evaluator* etor);
     static EvaluatorStatus prim_show(Evaluator* etor);
@@ -27,6 +29,7 @@ namespace plx {
     void prim_defineAll(Evaluator* etor) {
         definePrim("disp", prim_disp, etor);
         defineMacro("do", prim_do, etor);
+        defineMacro("if", prim_if, etor);
         defineMacro("let", prim_let, etor);
         defineMacro("quote", prim_quote, etor);
         definePrim("show", prim_show, etor);
@@ -68,6 +71,25 @@ namespace plx {
         Continuation* contin = new Continuation("do", _doContin, args);
         etor->pushExpr(contin);
         etor->pushObj(new Nil());
+        return ES_Running;
+    }
+
+    static EvaluatorStatus _ifContin(Evaluator* etor, Any* arg) {
+        List* parts = (List*)arg;
+        Any* value = etor->popObj();
+        etor->pushObj(
+            value->boolValue()
+            ? parts->_first
+            : ((List*)parts->_rest)->_first
+        );
+        return ES_Running;
+    }
+
+    static EvaluatorStatus prim_if(Evaluator* etor) {
+        List* parts = (List*)etor->popObj();
+        Continuation* contin = new Continuation("if", _ifContin, parts->_rest);
+        etor->pushExpr(contin);
+        etor->pushExpr(parts->_first);
         return ES_Running;
     }
 

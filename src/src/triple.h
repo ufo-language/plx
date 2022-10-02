@@ -11,6 +11,7 @@ namespace plx {
         Any* _key;
         Any* _value;
         Triple* _next;
+        bool boolValue() override { return !isEmpty(); }
         bool isEmpty() { return _key == nullptr; }
         Triple* locate(Any* name);
         void show(std::ostream& stream);

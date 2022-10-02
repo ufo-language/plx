@@ -46,9 +46,10 @@ namespace plx {
         enum TypeId _typeId;
         Any* _next;
         bool _isMarked;
+        virtual bool boolValue() { return true; }
         virtual void display(std::ostream& stream) { show(stream); }
-        static bool equalTo(Any* self, Any* other);
-        virtual bool isEqual(Any* other);
+        static bool IsEqual(Any* self, Any* other);
+        virtual bool isEqual(Any* other) { (void)other; return false; }
         virtual EvaluatorStatus evaluate(Evaluator* etor);
         virtual Triple* match(Any* other, Triple* env);
         virtual void show(std::ostream& stream) = 0;

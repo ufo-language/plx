@@ -2,8 +2,10 @@
 
 #include "src/any.h"
 #include "src/apply.h"
+#include "src/boolean.h"
 #include "src/integer.h"
 #include "src/list.h"
+#include "src/nil.h"
 #include "src/queue.h"
 #include "src/real.h"
 #include "src/string.h"
@@ -19,12 +21,17 @@ namespace plx {
         PS_Symbol
     };
 
-    // TODO use this function
-    void checkSymbol(std::string& symbol) {
-        if (symbol == "nil") {}
-        else if (symbol == "true") {}
-        else if (symbol == "false") {}
-        else {}
+    Any* parseSymbol(const std::string& name) {
+        if (name == "nil") {
+            return new Nil();
+        }
+        if (name == "true") {
+            return new Boolean(true);
+        }
+        if (name == "false") {
+            return new Boolean(false);
+        }
+        return new Symbol(name);
     }
 
     static List* _parse(const std::string& inputString, int index);
@@ -43,7 +50,7 @@ namespace plx {
         int rFrac = 0;
         int rDivisor = 1;
         bool parsingApplication = false;
-        Any* token;
+        Any* token = nullptr;
         while (contin) {
             char c = inputString[index++];
             //std::cout << "_parse state = " << parseState << ", c = '" << c << "', lexeme = '" << lexeme.str() << "'\n";
@@ -137,7 +144,7 @@ namespace plx {
                     }
                     else {
                         index--;
-                        token = new Symbol(lexeme.str());
+                        token = parseSymbol(lexeme.str());
                         goto MAKE_TOKEN;
                     }
                     break;

@@ -19,7 +19,7 @@ namespace plx {
         return stream;
     }
 
-    bool Any::equalTo(Any* self, Any* other) {
+    bool Any::IsEqual(Any* self, Any* other) {
         if (self == other) {
             return true;
         }
@@ -34,13 +34,8 @@ namespace plx {
         return ES_Running;
     }
 
-    bool Any::isEqual(Any* other) {
-        (void)other;
-        return false;
-    }
-
     Triple* Any::match(Any* other, Triple* env) {
-        return Any::equalTo(this, other) ? env : nullptr;
+        return Any::IsEqual(this, other) ? env : nullptr;
     }
 
 }
