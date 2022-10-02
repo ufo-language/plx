@@ -40,15 +40,15 @@ namespace plx {
     }
 
     EvaluatorStatus Apply::evaluate(Evaluator* etor) {
-        Continuation* contin = new Continuation("apply1", _apply, _args);
+        Continuation* contin = new Continuation("apply", _apply, _args);
         etor->pushExpr(contin);
         etor->pushExpr(_abstr);
         return ES_Running;
     }
 
     void Apply::show(std::ostream& stream) {
-        stream << '.' << _abstr;
-        _args->showWith(stream, " ", ";");
+        stream << START_CHAR << _abstr;
+        _args->showWith(stream, " ", std::string(1, STOP_CHAR));
     }
 
 }

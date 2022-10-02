@@ -35,6 +35,8 @@ namespace plx {
         definePrim("show", prim_show, etor);
     }
 
+    // primitives follow ---------------------------------------------
+
     static EvaluatorStatus prim_disp(Evaluator* etor) {
         List* args = (List*)etor->popObj();
         while (!args->isEmpty()) {

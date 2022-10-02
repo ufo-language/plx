@@ -28,6 +28,9 @@ namespace plx {
                 if (line.length() > 0) {
                     List* exprList = parse(line);
                     std::cout << "parse exprs = " << exprList << '\n';
+                    if (exprList == nullptr) {
+                        continue;
+                    }
                     EvaluatorStatus es = etor->evaluate(exprList);
                     switch (es) {
                         case ES_Running:

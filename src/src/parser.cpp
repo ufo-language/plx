@@ -72,15 +72,16 @@ namespace plx {
                         exprStack = (List*)exprStack->_rest;
                         goto MAKE_TOKEN;
                     }
-                    else if (c == '.') {
+                    else if (c == Apply::START_CHAR) {
                         exprStack = new List(expr, exprStack);
                         expr = new Queue();
                         lexeme = std::stringstream();
                         parsingApplication = true;
                     }
-                    else if (c == ';') {
+                    else if (c == Apply::STOP_CHAR) {
                         if (!parsingApplication) {
-                            std::cerr << "PS_Init ending semicolon with no starting dot\n";
+                            std::cerr << "PS_Init ending token '" << Apply::STOP_CHAR
+                                << "' with no start token '" << Apply::START_CHAR << "'\n";
                             return nullptr;
                         }
                         if (expr->_count == 0) {
