@@ -17,24 +17,21 @@ namespace plx {
     EvaluatorStatus _apply(Evaluator *etor, Any* arg) {
         Any* abstr = etor->popObj();
         EvaluatorStatus es = ES_Running;
-        switch (abstr->_typeId) {
-            case T_Prim: {
-                    Continuation* contin = new Continuation("apply2", _apply2, abstr);
-                    etor->pushExpr(contin);
-                    etor->pushExpr(arg);
-                }
-                break;
-            case T_PrimMacro:
-                etor->pushObj(arg);
-                ((Primitive*)abstr)->_primFun(etor);
-                break;
-            default: {
-                    Any** elems = new Any*[2]{new Symbol("ObjectNotApplyable"), abstr};
-                    Array* exnAry = new Array(2, elems);
-                    etor->_exception = exnAry;
-                    es = ES_Exception;
-                }
-                break;
+        TypeId typeId = abstr->_typeId;
+        if (typeId == T_Prim) {
+            Continuation* contin = new Continuation("applyPrim", _apply2, abstr);
+            etor->pushExpr(contin);
+            etor->pushExpr(arg);
+        }
+        else if (typeId == T_PrimMacro) {
+            etor->pushObj(arg);
+            ((Primitive*)abstr)->_primFun(etor);
+        }
+        else {
+            Any** elems = new Any*[2]{new Symbol("ObjectNotApplyable"), abstr};
+            Array* exnAry = new Array(2, elems);
+            etor->_exception = exnAry;
+            es = ES_Exception;
         }
         return es;
     }
