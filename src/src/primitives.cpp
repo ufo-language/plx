@@ -1,16 +1,19 @@
 #include "src/any.h"
 #include "src/continuation.h"
 #include "src/evaluator.h"
+#include "src/function.h"
 #include "src/list.h"
 #include "src/nil.h"
 #include "src/primitive.h"
 #include "src/queue.h"
 #include "src/symbol.h"
+#include "src/triple.h"
 
 namespace plx {
 
     static EvaluatorStatus prim_disp(Evaluator* etor);
     static EvaluatorStatus prim_do(Evaluator* etor);
+    static EvaluatorStatus prim_fun(Evaluator* etor);
     static EvaluatorStatus prim_if(Evaluator* etor);
     static EvaluatorStatus prim_let(Evaluator* etor);
     static EvaluatorStatus prim_quote(Evaluator* etor);
@@ -29,6 +32,7 @@ namespace plx {
     void prim_defineAll(Evaluator* etor) {
         definePrim("disp", prim_disp, etor);
         defineMacro("do", prim_do, etor);
+        defineMacro("fun", prim_fun, etor);
         defineMacro("if", prim_if, etor);
         defineMacro("let", prim_let, etor);
         defineMacro("quote", prim_quote, etor);
@@ -73,6 +77,23 @@ namespace plx {
         Continuation* contin = new Continuation("do", _doContin, args);
         etor->pushExpr(contin);
         etor->pushObj(new Nil());
+        return ES_Running;
+    }
+
+    static EvaluatorStatus prim_fun(Evaluator* etor) {
+        List* parts = (List*)etor->popObj();
+        Symbol* name = (Symbol*)parts->_first;
+        parts = (List*)parts->_rest;
+        List* params = (List*)parts->_first;
+        parts = (List*)parts->_rest;
+        List* body = (List*)parts->_rest;
+        std::cout << "prim_fun name = " << name << "\n";
+        std::cout << "prim_fun params = " << params << "\n";
+        std::cout << "prim_fun body = " << body << "\n";
+        Triple* triple = etor->bind(name, new Nil());
+        Function* fun = new Function(params, body, etor->_env);
+        triple->_value = fun;
+        etor->pushObj(fun);
         return ES_Running;
     }
 

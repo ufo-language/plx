@@ -15,7 +15,7 @@ namespace plx {
         Triple* _estack;
         Triple* _env;
         Any* _exception;
-        void bind(Any* name, Any* value);
+        Triple* bind(Any* name, Any* value);
         EvaluatorStatus evaluate(List* exprList);
         EvaluatorStatus evaluate(int nSteps);
         bool findExceptionHandler();

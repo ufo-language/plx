@@ -11,8 +11,9 @@ namespace plx {
         : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()}, _exception{nullptr} {
     }
 
-    void Evaluator::bind(Any* name, Any* value) {
+    Triple* Evaluator::bind(Any* name, Any* value) {
         _env = new Triple(name, value, _env);
+        return _env;
     }
 
     // This is a top-level function to be called by the REPL
