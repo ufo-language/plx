@@ -40,7 +40,6 @@ namespace plx {
     }
 
     EvaluatorStatus Apply::evaluate(Evaluator* etor) {
-        std::cout << "Apply::evaluate this = " << this << "\n";
         Continuation* contin = new Continuation("apply1", _apply, _args);
         etor->pushExpr(contin);
         etor->pushExpr(_abstr);
