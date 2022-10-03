@@ -5,7 +5,7 @@
 namespace plx {
 
     void Continuation::evaluate(Evaluator* etor) {
-        _continFun(etor, _arg);
+        _continFun(etor, _arg, this);
     }
 
     void Continuation::show(std::ostream& stream) {

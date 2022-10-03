@@ -8,18 +8,20 @@
 
 namespace plx {
 
-    void _apply2(Evaluator* etor, Any* arg) {
+    void _apply2(Evaluator* etor, Any* arg, Continuation* contin) {
+        (void)contin;
         Primitive* prim = (Primitive*)arg;
         PrimFun primFun = prim->_primFun;
         primFun(etor);
     }
 
-    void _apply(Evaluator *etor, Any* arg) {
+    void _apply(Evaluator *etor, Any* arg, Continuation* contin) {
+        (void)contin;
         Any* abstr = etor->popObj();
         TypeId typeId = abstr->_typeId;
         if (typeId == T_Prim) {
-            Continuation* contin = new Continuation("applyPrim", _apply2, abstr);
-            etor->pushExpr(contin);
+            Continuation* contin2 = new Continuation("applyPrim", _apply2, abstr);
+            etor->pushExpr(contin2);
             etor->pushExpr(arg);
         }
         else if (typeId == T_PrimMacro) {

@@ -17,8 +17,9 @@ namespace plx {
         Any* value;
     };
 
-    static void _makeList(Evaluator* etor, Any* arg) {
+    static void _makeList(Evaluator* etor, Any* arg, Continuation* contin) {
         (void)arg;
+        (void)contin;
         Any* first = etor->popObj();
         Any* rest = etor->popObj();
         List* list = new List(first, rest);

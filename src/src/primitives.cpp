@@ -50,7 +50,7 @@ namespace plx {
         etor->pushObj(new Nil());
     }
 
-    static void _doContin(Evaluator* etor, Any* arg) {
+    static void _doContin(Evaluator* etor, Any* arg, Continuation* contin) {
         etor->popObj();
         List* args = (List*)arg;
         if (args->isEmpty()) {
@@ -63,7 +63,7 @@ namespace plx {
                 etor->pushExpr(first);
             }
             else {
-                Continuation* contin = new Continuation("do", _doContin, rest);
+                contin->_arg = rest;
                 etor->pushExpr(contin);
                 etor->pushExpr(first);
             }
@@ -96,7 +96,8 @@ namespace plx {
         etor->pushObj(fun);
     }
 
-    static void _ifContin(Evaluator* etor, Any* arg) {
+    static void _ifContin(Evaluator* etor, Any* arg, Continuation* contin) {
+        (void)contin;
         List* parts = (List*)arg;
         Any* value = etor->popObj();
         etor->pushObj(
@@ -113,7 +114,8 @@ namespace plx {
         etor->pushExpr(parts->_first);
     }
 
-    static void _letContin(Evaluator* etor, Any* arg) {
+    static void _letContin(Evaluator* etor, Any* arg, Continuation* contin) {
+        (void)contin;
         Queue* nameQueue = (Queue*)arg;
         int nNames = nameQueue->_count;
         List* nameList = (List*)nameQueue->_first;

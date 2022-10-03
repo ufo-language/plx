@@ -4,9 +4,10 @@
 
 namespace plx {
 
+    struct Continuation;
     struct List;
 
-    typedef void (*ContinFun)(Evaluator *etor, Any* arg);
+    typedef void (*ContinFun)(Evaluator *etor, Any* arg, Continuation* contin);
 
     struct Continuation : public Any {
         Continuation(const std::string& name, ContinFun continFun, Any* arg)

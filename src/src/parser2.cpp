@@ -13,21 +13,27 @@ namespace plx {
         _tokens = new Queue();
     }
 
-    static void _number(Evaluator* etor, Any* arg) {
+    static void _number(Evaluator* etor, Any* arg, Continuation* contin) {
+        std::cout << "parser2 _number got here 1\n";
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
-        std::cout << "parser2 _number got here 1, c = " << c << "\n";
+        std::cout << "parser2 _number got here 2, c = " << c << "\n";
         if (isdigit(c)) {
+            std::cout << "parser2 _number got here 3, is a digit\n";
             parser->_lexeme << c;
-            etor->pushExpr(parser);
+            etor->pushExpr(contin);
+            std::cout << "parser2 _number got here 4, etor = " << etor << "\n";
         }
         else {
-            std::cout << "parser2 _number got here 2, c = " << c << "\n";
+            std::cout << "parser2 _number got here 5, c = " << c << "\n";
         }
     }
 
-    static void _symbol(Evaluator* etor, Any* arg) {
+    static void _symbol(Evaluator* etor, Any* arg, Continuation* contin) {
         std::cout << "parser2 _symbol got here 1\n";
+        (void)etor;
+        (void)arg;
+        (void)contin;
     }
 
     void Parser::parse(Evaluator* etor) {

@@ -1,14 +1,16 @@
+#include <cassert>
+
 #include "src/evaluator.h"
 #include "src/exceptionhandler.h"
 #include "src/list.h"
 #include "src/primitives.h"
 #include "src/triple.h"
 
-#include <cassert>
+
 namespace plx {
 
     Evaluator::Evaluator()
-        : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()}, _exception{nullptr} {
+        : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()}, _status{ES_Running}, _exception{nullptr} {
     }
 
     Triple* Evaluator::bind(Any* name, Any* value) {
