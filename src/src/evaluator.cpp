@@ -133,8 +133,10 @@ namespace plx {
         if (expr == nullptr) {
             _status = ES_Terminated;
         }
-        std::cout << "Evaluator::step expr = " << expr << "\n";
-        expr->evaluate(this);
+        else {
+            std::cout << "Evaluator::step expr = " << expr << "\n";
+            expr->evaluate(this);
+        }
     }
 
 }
