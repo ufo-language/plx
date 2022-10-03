@@ -17,26 +17,24 @@ namespace plx {
         Any* value;
     };
 
-    EvaluatorStatus makeList(Evaluator* etor, Any* arg) {
+    static void _makeList(Evaluator* etor, Any* arg) {
         (void)arg;
         Any* first = etor->popObj();
         Any* rest = etor->popObj();
         List* list = new List(first, rest);
         etor->pushObj(list);
-        return ES_Running;
     }
 
-    EvaluatorStatus List::evaluate(Evaluator* etor) {
+    void List::evaluate(Evaluator* etor) {
         if (isEmpty()) {
             etor->pushObj(this);
         }
         else {
-            Continuation* contin = new Continuation("list", makeList, new Nil());
+            Continuation* contin = new Continuation("list", _makeList, new Nil());
             etor->pushExpr(contin);
             etor->pushExpr(_first);
             etor->pushExpr(_rest);
         }
-        return ES_Running;
     }
 
     bool List::isEqual(Any* other) {

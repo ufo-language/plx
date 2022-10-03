@@ -8,15 +8,14 @@
 
 namespace plx {
 
-    EvaluatorStatus _apply2(Evaluator* etor, Any* arg) {
+    void _apply2(Evaluator* etor, Any* arg) {
         Primitive* prim = (Primitive*)arg;
         PrimFun primFun = prim->_primFun;
-        return primFun(etor);
+        primFun(etor);
     }
 
-    EvaluatorStatus _apply(Evaluator *etor, Any* arg) {
+    void _apply(Evaluator *etor, Any* arg) {
         Any* abstr = etor->popObj();
-        EvaluatorStatus es = ES_Running;
         TypeId typeId = abstr->_typeId;
         if (typeId == T_Prim) {
             Continuation* contin = new Continuation("applyPrim", _apply2, abstr);
@@ -31,16 +30,14 @@ namespace plx {
             Any** elems = new Any*[2]{new Symbol("ObjectNotApplyable"), abstr};
             Array* exnAry = new Array(2, elems);
             etor->_exception = exnAry;
-            es = ES_Exception;
+            etor->_status = ES_Exception;
         }
-        return es;
     }
 
-    EvaluatorStatus Apply::evaluate(Evaluator* etor) {
+    void Apply::evaluate(Evaluator* etor) {
         Continuation* contin = new Continuation("apply", _apply, _args);
         etor->pushExpr(contin);
         etor->pushExpr(_abstr);
-        return ES_Running;
     }
 
     void Apply::show(std::ostream& stream) {

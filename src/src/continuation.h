@@ -6,7 +6,7 @@ namespace plx {
 
     struct List;
 
-    typedef EvaluatorStatus (*ContinFun)(Evaluator *etor, Any* arg);
+    typedef void (*ContinFun)(Evaluator *etor, Any* arg);
 
     struct Continuation : public Any {
         Continuation(const std::string& name, ContinFun continFun, Any* arg)
@@ -14,7 +14,7 @@ namespace plx {
         std::string _name;
         ContinFun _continFun;
         Any* _arg;
-        EvaluatorStatus evaluate(Evaluator* etor);
+        void evaluate(Evaluator* etor);
         void show(std::ostream& stream);
     };
 

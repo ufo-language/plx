@@ -4,16 +4,15 @@
 
 namespace plx {
 
-    EvaluatorStatus Symbol::evaluate(Evaluator* etor) {
+    void Symbol::evaluate(Evaluator* etor) {
         Any* value = etor->lookup(this);
         if (value == nullptr) {
             Any** elems = new Any*[2]{new Symbol("UnboundIdentifier"), this};
             Array* exnAry = new Array(2, elems);
             etor->_exception = exnAry;
-            return ES_Exception;
+            etor->_status = ES_Exception;
         }
         etor->pushObj(value);
-        return ES_Running;
     }
 
     bool Symbol::isEqual(Any* other) {

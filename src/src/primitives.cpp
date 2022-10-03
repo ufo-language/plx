@@ -11,13 +11,13 @@
 
 namespace plx {
 
-    static EvaluatorStatus prim_disp(Evaluator* etor);
-    static EvaluatorStatus prim_do(Evaluator* etor);
-    static EvaluatorStatus prim_fun(Evaluator* etor);
-    static EvaluatorStatus prim_if(Evaluator* etor);
-    static EvaluatorStatus prim_let(Evaluator* etor);
-    static EvaluatorStatus prim_quote(Evaluator* etor);
-    static EvaluatorStatus prim_show(Evaluator* etor);
+    static void prim_disp(Evaluator* etor);
+    static void prim_do(Evaluator* etor);
+    static void prim_fun(Evaluator* etor);
+    static void prim_if(Evaluator* etor);
+    static void prim_let(Evaluator* etor);
+    static void prim_quote(Evaluator* etor);
+    static void prim_show(Evaluator* etor);
 
     static void definePrim(const std::string& name, PrimFun primFun, Evaluator* etor) {
         Primitive* prim = new Primitive(name, T_Prim, primFun);
@@ -41,17 +41,16 @@ namespace plx {
 
     // primitives follow ---------------------------------------------
 
-    static EvaluatorStatus prim_disp(Evaluator* etor) {
+    static void prim_disp(Evaluator* etor) {
         List* args = (List*)etor->popObj();
         while (!args->isEmpty()) {
             args->_first->display(std::cout);
             args = (List*)args->_rest;
         }
         etor->pushObj(new Nil());
-        return ES_Running;
     }
 
-    static EvaluatorStatus _doContin(Evaluator* etor, Any* arg) {
+    static void _doContin(Evaluator* etor, Any* arg) {
         etor->popObj();
         List* args = (List*)arg;
         if (args->isEmpty()) {
@@ -69,35 +68,35 @@ namespace plx {
                 etor->pushExpr(first);
             }
         }
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_do(Evaluator* etor) {
+    static void prim_do(Evaluator* etor) {
         List* args = (List*)etor->popObj();
         Continuation* contin = new Continuation("do", _doContin, args);
         etor->pushExpr(contin);
         etor->pushObj(new Nil());
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_fun(Evaluator* etor) {
+    static void prim_fun(Evaluator* etor) {
         List* parts = (List*)etor->popObj();
-        Symbol* name = (Symbol*)parts->_first;
-        parts = (List*)parts->_rest;
+        Any* firstPart = parts->_first;
+        Symbol* name = nullptr;
+        Triple* envTriple = etor->_env;
+        if (firstPart->_typeId == T_Symbol) {
+            name = (Symbol*)firstPart;
+            envTriple = etor->bind(name, new Nil());
+            parts = (List*)parts->_rest;
+        }
         List* params = (List*)parts->_first;
-        parts = (List*)parts->_rest;
         List* body = (List*)parts->_rest;
-        std::cout << "prim_fun name = " << name << "\n";
-        std::cout << "prim_fun params = " << params << "\n";
-        std::cout << "prim_fun body = " << body << "\n";
-        Triple* triple = etor->bind(name, new Nil());
-        Function* fun = new Function(params, body, etor->_env);
-        triple->_value = fun;
+        Function* fun = new Function(params, body, envTriple);
+        if (name != nullptr) {
+            envTriple->_value = fun;
+        }
         etor->pushObj(fun);
-        return ES_Running;
     }
 
-    static EvaluatorStatus _ifContin(Evaluator* etor, Any* arg) {
+    static void _ifContin(Evaluator* etor, Any* arg) {
         List* parts = (List*)arg;
         Any* value = etor->popObj();
         etor->pushObj(
@@ -105,18 +104,16 @@ namespace plx {
             ? parts->_first
             : ((List*)parts->_rest)->_first
         );
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_if(Evaluator* etor) {
+    static void prim_if(Evaluator* etor) {
         List* parts = (List*)etor->popObj();
         Continuation* contin = new Continuation("if", _ifContin, parts->_rest);
         etor->pushExpr(contin);
         etor->pushExpr(parts->_first);
-        return ES_Running;
     }
 
-    static EvaluatorStatus _letContin(Evaluator* etor, Any* arg) {
+    static void _letContin(Evaluator* etor, Any* arg) {
         Queue* nameQueue = (Queue*)arg;
         int nNames = nameQueue->_count;
         List* nameList = (List*)nameQueue->_first;
@@ -127,10 +124,9 @@ namespace plx {
             nameList = (List*)nameList->_rest;
         }
         etor->pushObj(new Nil());
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_let(Evaluator* etor) {
+    static void prim_let(Evaluator* etor) {
         Queue* nameQ = new Queue();
         Continuation* contin = new Continuation("let", _letContin, nameQ);
         etor->pushExpr(contin);
@@ -142,23 +138,20 @@ namespace plx {
             etor->pushExpr(((List*)binding->_rest)->_first);
             bindings = (List*)bindings->_rest;
         }
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_quote(Evaluator* etor) {
+    static void prim_quote(Evaluator* etor) {
         (void)etor;
         // do nothing; leave the list of arguments on the object stack
-        return ES_Running;
     }
 
-    static EvaluatorStatus prim_show(Evaluator* etor) {
+    static void prim_show(Evaluator* etor) {
         List* args = (List*)etor->popObj();
         while (!args->isEmpty()) {
             args->_first->show(std::cout);
             args = (List*)args->_rest;
         }
         etor->pushObj(new Nil());
-        return ES_Running;
     }
 
 }

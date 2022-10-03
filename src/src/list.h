@@ -11,7 +11,7 @@ namespace plx {
         Any* _first;
         Any* _rest;
         bool boolValue() { return !isEmpty(); }
-        EvaluatorStatus evaluate(Evaluator* etor);
+        void evaluate(Evaluator* etor);
         bool isEmpty() { return _first == nullptr; }
         bool isEqual(Any* other);
         List* reverse();

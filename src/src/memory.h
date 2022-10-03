@@ -8,6 +8,7 @@ namespace plx {
         Memory() : _spine{nullptr} {}
         ~Memory() { freeAll(); }
         Any* _spine;
+        int _nRegisteredObjects = 0;
         void freeAll();
         void registerObject(Any* obj);
     };

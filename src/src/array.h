@@ -9,6 +9,7 @@ namespace plx {
         int _count;
         Any** _elems;
         bool boolValue() { return _count > 0; }
+        // TODO void evaluate(Evaluator* etor) override;
         void show(std::ostream& stream) override;
     };
 

@@ -18,7 +18,7 @@ namespace plx {
 
     // This is a top-level function to be called by the REPL
     // TODO eliminate this function eventually
-    EvaluatorStatus Evaluator::evaluate(List* exprList) {
+    void Evaluator::evaluate(List* exprList) {
         exprList = exprList->reverse();
         // TODO convert exprList into a DO expression; intermediate results need to be popped off the object stack
         while (!exprList->isEmpty()) {
@@ -27,11 +27,11 @@ namespace plx {
             exprList = (List*)exprList->_rest;
         }
         // evaluate expressions
-        EvaluatorStatus es = ES_Running;
+        _status = ES_Running;
         bool contin = true;
         while (contin) {
-            es = step();
-            switch (es) {
+            step();
+            switch (_status) {
                 case ES_Running:
                     // just keep looping
                     break;
@@ -48,7 +48,6 @@ namespace plx {
                     break;
             }
         }
-        return es;
     }
 
 #if 0
@@ -127,13 +126,13 @@ namespace plx {
                << ']';
     }
 
-    EvaluatorStatus Evaluator::step() {
+    void Evaluator::step() {
         Any* expr = popExpr();
         if (expr == nullptr) {
-            return ES_Terminated;
+            _status = ES_Terminated;
         }
         std::cout << "Evaluator::step expr = " << expr << "\n";
-        return expr->evaluate(this);
+        expr->evaluate(this);
     }
 
 }

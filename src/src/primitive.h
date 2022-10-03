@@ -8,7 +8,7 @@ namespace plx {
 
     struct Evaluator;
 
-    typedef EvaluatorStatus (*PrimFun)(Evaluator *etor);
+    typedef void (*PrimFun)(Evaluator *etor);
 
     struct Primitive : public Any {
         // The TypeId must be supplied to this constructor, but it's expected

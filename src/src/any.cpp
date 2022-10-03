@@ -29,9 +29,8 @@ namespace plx {
         return self->isEqual(other);
     }
 
-    EvaluatorStatus Any::evaluate(Evaluator* etor) {
+    void Any::evaluate(Evaluator* etor) {
         etor->pushObj(this);
-        return ES_Running;
     }
 
     Triple* Any::match(Any* other, Triple* env) {

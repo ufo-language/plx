@@ -19,6 +19,7 @@ namespace plx {
         T_Integer,
         T_List,
         T_Nil,
+        T_Parser,
         T_Prim,
         T_PrimMacro,
         T_Queue,
@@ -51,7 +52,7 @@ namespace plx {
         virtual void display(std::ostream& stream) { show(stream); }
         static bool IsEqual(Any* self, Any* other);
         virtual bool isEqual(Any* other) { (void)other; return false; }
-        virtual EvaluatorStatus evaluate(Evaluator* etor);
+        virtual void evaluate(Evaluator* etor);
         virtual Triple* match(Any* other, Triple* env);
         virtual void show(std::ostream& stream) = 0;
         friend std::ostream & operator<<(std::ostream &stream, Any* object);

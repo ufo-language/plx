@@ -4,8 +4,8 @@
 
 namespace plx {
 
-    EvaluatorStatus Continuation::evaluate(Evaluator* etor) {
-        return _continFun(etor, _arg);
+    void Continuation::evaluate(Evaluator* etor) {
+        _continFun(etor, _arg);
     }
 
     void Continuation::show(std::ostream& stream) {

@@ -22,15 +22,9 @@ namespace plx {
     };
 
     Any* parseSymbol(const std::string& name) {
-        if (name == "nil") {
-            return new Nil();
-        }
-        if (name == "true") {
-            return new Boolean(true);
-        }
-        if (name == "false") {
-            return new Boolean(false);
-        }
+        if (name == "nil") { return new Nil(); }
+        if (name == "true") { return new Boolean(true); }
+        if (name == "false") { return new Boolean(false); }
         return new Symbol(name);
     }
 

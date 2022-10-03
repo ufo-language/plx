@@ -31,8 +31,8 @@ namespace plx {
                     if (exprList == nullptr) {
                         continue;
                     }
-                    EvaluatorStatus es = etor->evaluate(exprList);
-                    switch (es) {
+                    etor->evaluate(exprList);
+                    switch (etor->_status) {
                         case ES_Running:
                         case ES_Blocked:
                             std::cout << "REPL::loop switch got ES_Blocked or ES_Running; not implemented yet\n";
