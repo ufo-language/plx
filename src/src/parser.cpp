@@ -44,8 +44,8 @@ namespace plx {
         etor->pushExpr(contin);
     }
 
-    // NB These functions must be plain functions and not C++ member functions
-    // because they're stored in Continuation instances.
+    // NB Many of these functions must be plain functions and not C++ member
+    // functions because they're stored in Continuation instances.
 
     static void _addToken(Parser* parser, Any* token) {
         parser->_tokens->enq(token);
@@ -65,20 +65,35 @@ namespace plx {
         return new Symbol(name);
     }
 
-    static void _makeApplication(Evaluator* etor, Parser* parser, Continuation* contin) {
+    static bool _checkClose(Evaluator* etor, Parser* parser, char expectedChar) {
         Triple* closeTriple = parser->_expectedClose;
-        Symbol* exceptionSymbol = nullptr;
         if (closeTriple->isEmpty()) {
-            exceptionSymbol = new Symbol("ClosingParenhesisNotExcpected");
-            goto EXCEPTION;
+            Symbol* exceptionSymbol = new Symbol("ClosingCharacterNotExpected");
+            Any** elems = new Any*[3]{exceptionSymbol,
+                                      new String(std::string(1, expectedChar)),
+                                      new Integer(parser->_pos)};
+            Array* exnAry = new Array(2, elems);
+            etor->_exception = exnAry;
+            etor->_status = ES_Exception;
+            return false;
         }
-        else {
-            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
-            std::cout << "expectedCloseChar = " << (char)expectedCloseChar->_value << "\n";
-            if (expectedCloseChar->_value != ')') {
-                exceptionSymbol = new Symbol("ClosingParenthesisExcpected");
-                goto EXCEPTION;
-            }
+        Integer* pushedCloseChar = (Integer*)closeTriple->_key;
+        if (pushedCloseChar->_value != (int)expectedChar) {
+            Symbol* exceptionSymbol = new Symbol("ClosingCharacterExpected");
+            Any** elems = new Any*[3]{exceptionSymbol,
+                                      new String(std::string(1, pushedCloseChar->_value)),
+                                      new Integer(parser->_pos)};
+            Array* exnAry = new Array(3, elems);
+            etor->_exception = exnAry;
+            etor->_status = ES_Exception;
+            return false;
+        }
+        parser->_expectedClose = closeTriple->_next;
+        return true;
+    }
+
+    static void _makeApplication(Evaluator* etor, Parser* parser, Continuation* contin) {
+        if (_checkClose(etor, parser, ')')) {
             List* tokens = parser->_tokens->_first;
             Any* appObj;
             if (tokens->isEmpty()) {
@@ -88,8 +103,13 @@ namespace plx {
                 Any* abstrObj = tokens->_first;
                 Any* restObj = tokens->_rest;
                 if (restObj->_typeId != T_List) {
-                    exceptionSymbol = new Symbol("ProperListExpected");
-                    goto EXCEPTION;
+                    Symbol* exceptionSymbol = new Symbol("ProperListExpected");
+                    Any** elems = new Any*[2]{exceptionSymbol,
+                                              new Integer(parser->_pos)};
+                    Array* exnAry = new Array(2, elems);
+                    etor->_exception = exnAry;
+                    etor->_status = ES_Exception;
+                    return;
                 }
                 List* args = (List*)restObj;
                 appObj = new Apply(abstrObj, args);
@@ -97,77 +117,28 @@ namespace plx {
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(appObj);
-            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
-        return;
-    EXCEPTION:
-        Any** elems = new Any*[3]{exceptionSymbol,
-                                  closeTriple->_key,
-                                  closeTriple->_value};
-        Array* exnAry = new Array(3, elems);
-        etor->_exception = exnAry;
-        etor->_status = ES_Exception;
     }
 
     static void _makeArray(Evaluator* etor, Parser* parser, Continuation* contin) {
-        Triple* closeTriple = parser->_expectedClose;
-        Symbol* exceptionSymbol = nullptr;
-        if (closeTriple->isEmpty()) {
-            exceptionSymbol = new Symbol("ClosingBraceNotExcpected");
-            goto EXCEPTION;
-        }
-        else {
-            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
-            if (expectedCloseChar->_value != '}') {
-                exceptionSymbol = new Symbol("ClosingBraceExcpected");
-                goto EXCEPTION;
-            }
+        if (_checkClose(etor, parser, '}')) {
             Array* ary = Array::fromQueue(parser->_tokens);
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(ary);
-            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
-        return;
-    EXCEPTION:
-        Any** elems = new Any*[3]{exceptionSymbol,
-                                  closeTriple->_key,
-                                  closeTriple->_value};
-        Array* exnAry = new Array(3, elems);
-        etor->_exception = exnAry;
-        etor->_status = ES_Exception;
     }
 
     static void _makeList(Evaluator* etor, Parser* parser, Continuation* contin) {
-        Triple* closeTriple = parser->_expectedClose;
-        Symbol* exceptionSymbol = nullptr;
-        if (closeTriple->isEmpty()) {
-            exceptionSymbol = new Symbol("ClosingBracketNotExpected");
-            goto EXCEPTION;
-        }
-        else {
-            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
-            if (expectedCloseChar->_value != ']') {
-                exceptionSymbol = new Symbol("ClosingBracketExpected");
-                goto EXCEPTION;
-            }
+        if (_checkClose(etor, parser, ']')) {
             List* list = parser->_tokens->_first;
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(list);
-            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
-        return;
-    EXCEPTION:
-        Any** elems = new Any*[3]{exceptionSymbol,
-                                  closeTriple->_key,
-                                  closeTriple->_value};
-        Array* exnAry = new Array(3, elems);
-        etor->_exception = exnAry;
-        etor->_status = ES_Exception;
     }
 
     static void _parseNumber(Evaluator* etor, Any* arg, Continuation* contin) {
