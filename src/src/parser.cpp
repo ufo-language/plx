@@ -60,6 +60,7 @@ namespace plx {
         }
         else {
             Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            std::cout << "expectedCloseChar = " << (char)expectedCloseChar->_value << "\n";
             if (expectedCloseChar->_value != ')') {
                 exceptionSymbol = new Symbol("ClosingParenthesisExcpected");
                 goto EXCEPTION;
@@ -82,6 +83,7 @@ namespace plx {
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(appObj);
+            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
         return;
@@ -111,6 +113,7 @@ namespace plx {
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(ary);
+            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
         return;
@@ -140,6 +143,7 @@ namespace plx {
             parser->_tokens = (Queue*)parser->_queueStack->_first;
             parser->_queueStack = (List*)parser->_queueStack->_rest;
             parser->_tokens->enq(list);
+            parser->_expectedClose = closeTriple->_next;
             etor->pushExpr(contin);
         }
         return;

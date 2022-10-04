@@ -25,7 +25,7 @@ namespace plx {
         stream << '{';
         for (int n=0; n<_count; n++) {
             if (n > 0) {
-                stream << ", ";
+                stream << ' ';
             }
             _elems[n]->show(stream);
         }

@@ -31,7 +31,7 @@ namespace plx {
                 std::cout << "REPL::loop switch got ES_Blocked or ES_Running; not implemented yet\n";
                 break;
             case ES_Exception:
-                std::cout << "PARSE ERROR: " << etor->_exception << "\n";
+                std::cout << "Error: " << etor->_exception << "\n";
                 break;
             case ES_Terminated:
                 exprList = (List*)etor->popObj();
@@ -39,6 +39,24 @@ namespace plx {
                 break;
         }
         return exprList;
+    }
+
+    Any* REPL::_eval(List* exprList, Evaluator* etor) {
+        etor->evaluate(exprList);
+        Any* res = nullptr;
+        switch (etor->_status) {
+            case ES_Running:
+            case ES_Blocked:
+                std::cerr << "REPL::loop switch got ES_Blocked or ES_Running; not implemented yet\n";
+                break;
+            case ES_Exception:
+                std::cerr << "Error: " << etor->_exception << "\n";
+                break;
+            case ES_Terminated:
+                res = etor->popObj();
+                break;
+        }
+        return res;
     }
 
     int REPL::loop(void) {
@@ -52,10 +70,12 @@ namespace plx {
                 std::cout << "input string = '" << line << "'\n";
                 if (line.length() > 0) {
                     List* exprList = _parse(line, parser, etor);
-                    std::cout << "parse exprs = " << exprList << '\n';
-                    etor->evaluate(exprList);
-                    Any* res = etor->popObj();
-                    std::cout << res << '\n';
+                    if (exprList != nullptr) {
+                        Any* res = _eval(exprList, etor);
+                        if (res != nullptr && res->_typeId != T_Nil) {
+                            std::cout << res << '\n';
+                        }
+                    }
                 }
             }
             if (!std::cin) {
