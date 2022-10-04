@@ -1,8 +1,10 @@
+#include "apply.h"
 #include "array.h"
 #include "continuation.h"
 #include "evaluator.h"
 #include "integer.h"
 #include "list.h"
+#include "nil.h"
 #include "parser2.h"
 #include "queue.h"
 #include "string.h"
@@ -28,17 +30,60 @@ namespace plx {
         parser->_lexeme.str(std::string());
     }
 
+    static void _makeApplication(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("ClosingParenhesisNotExcpected");
+            goto EXCEPTION;
+        }
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != ')') {
+                exceptionSymbol = new Symbol("ClosingParenthesisExcpected");
+                goto EXCEPTION;
+            }
+            List* tokens = parser->_tokens->_first;
+            Any* appObj;
+            if (tokens->isEmpty()) {
+                appObj = new Nil();
+            }
+            else {
+                Any* abstrObj = tokens->_first;
+                Any* restObj = tokens->_rest;
+                if (restObj->_typeId != T_List) {
+                    exceptionSymbol = new Symbol("ProperListExpected");
+                    goto EXCEPTION;
+                }
+                List* args = (List*)restObj;
+                appObj = new Apply(abstrObj, args);
+            }
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(appObj);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
+
     static void _makeArray(Evaluator* etor, Parser* parser, Continuation* contin) {
         Triple* closeTriple = parser->_expectedClose;
         Symbol* exceptionSymbol = nullptr;
         if (closeTriple->isEmpty()) {
-            exceptionSymbol = new Symbol("BraceNotExcpected");
+            exceptionSymbol = new Symbol("ClosingBraceNotExcpected");
             goto EXCEPTION;
         }
         else {
             Integer* expectedCloseChar = (Integer*)closeTriple->_key;
             if (expectedCloseChar->_value != '}') {
-                exceptionSymbol = new Symbol("BraceExcpected");
+                exceptionSymbol = new Symbol("ClosingBraceExcpected");
                 goto EXCEPTION;
             }
             Array* ary = Array::fromQueue(parser->_tokens);
@@ -61,13 +106,13 @@ namespace plx {
         Triple* closeTriple = parser->_expectedClose;
         Symbol* exceptionSymbol = nullptr;
         if (closeTriple->isEmpty()) {
-            exceptionSymbol = new Symbol("BracketNotExpected");
+            exceptionSymbol = new Symbol("ClosingBracketNotExpected");
             goto EXCEPTION;
         }
         else {
             Integer* expectedCloseChar = (Integer*)closeTriple->_key;
             if (expectedCloseChar->_value != ']') {
-                exceptionSymbol = new Symbol("BracketExpected");
+                exceptionSymbol = new Symbol("ClosingBracketExpected");
                 goto EXCEPTION;
             }
             List* list = parser->_tokens->_first;
@@ -154,7 +199,15 @@ namespace plx {
             etor->pushExpr(contin);
         }
         else if (c == '(') {
-            // parse application
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer(')'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == ')') {
+            _makeApplication(etor, parser, contin);
         }
         else if (c == '[') {
             parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
