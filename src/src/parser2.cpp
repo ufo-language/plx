@@ -1,3 +1,4 @@
+#include "array.h"
 #include "continuation.h"
 #include "evaluator.h"
 #include "integer.h"
@@ -6,23 +7,86 @@
 #include "queue.h"
 #include "string.h"
 #include "symbol.h"
+#include "triple.h"
 
 namespace plx {
 
     Parser::Parser()
-        : Any{T_Parser} {
-        _pos = 0;
-        _tokens = new Queue();
+        : Any{T_Parser},
+          _tokens{new Queue()},
+          _queueStack{new List()},
+          _expectedClose{new Triple()} {
     }
+
+    static void _parse(Evaluator* etor, Any* arg, Continuation* contin);
+
+    // NB These functions must be plain functions and not C++ member functions
+    // because they're stored in Continuation instances.
 
     static void _addToken(Parser* parser, Any* token) {
         parser->_tokens->enq(token);
         parser->_lexeme.str(std::string());
     }
 
-    static void _parse(Evaluator* etor, Any* arg, Continuation* contin);
+    static void _makeArray(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("BraceNotExcpected");
+            goto EXCEPTION;
+        }
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != '}') {
+                exceptionSymbol = new Symbol("BraceExcpected");
+                goto EXCEPTION;
+            }
+            Array* ary = Array::fromQueue(parser->_tokens);
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(ary);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
 
-    static void _number(Evaluator* etor, Any* arg, Continuation* contin) {
+    static void _makeList(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("BracketNotExpected");
+            goto EXCEPTION;
+        }
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != ']') {
+                exceptionSymbol = new Symbol("BracketExpected");
+                goto EXCEPTION;
+            }
+            List* list = parser->_tokens->_first;
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(list);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
+
+    static void _parseNumber(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
         if (isdigit(c)) {
@@ -37,7 +101,7 @@ namespace plx {
         etor->pushExpr(contin);
     }
 
-    static void _string(Evaluator* etor, Any* arg, Continuation* contin) {
+    static void _parseString(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
         if (c == '\"') {
@@ -51,7 +115,7 @@ namespace plx {
         etor->pushExpr(contin);
     }
 
-    static void _symbol(Evaluator* etor, Any* arg, Continuation* contin) {
+    static void _parseSymbol(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
         if (isalpha(c)) {
@@ -72,32 +136,47 @@ namespace plx {
         if (isalpha(c)) {
             parser->_lexeme << c;
             contin->_name = "parser:symbol";  // TODO after this all works, don't bother changing the name of the parser anywhere
-            contin->_continFun = _symbol;
+            contin->_continFun = _parseSymbol;
             etor->pushExpr(contin);
         }
         else if (isdigit(c)) {
             parser->_iValue = c - '0';
             contin->_name = "parser:number";
-            contin->_continFun = _number;
+            contin->_continFun = _parseNumber;
             etor->pushExpr(contin);
         }
         else if (isblank(c)) {
             etor->pushExpr(contin);
         }
         else if (c == '"') {
-            // parse string
             contin->_name = "parser:string";
-            contin->_continFun = _string;
+            contin->_continFun = _parseString;
             etor->pushExpr(contin);
         }
         else if (c == '(') {
             // parse application
         }
         else if (c == '[') {
-            // parse list
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer(']'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == ']') {
+            _makeList(etor, parser, contin);
         }
         else if (c == '{') {
-            // parse array
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer('}'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == '}') {
+            _makeArray(etor, parser, contin);
         }
         else if (c == '\0') {
             // got EOI

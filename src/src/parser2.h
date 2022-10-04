@@ -10,10 +10,12 @@ namespace plx {
 
     struct Parser : public Any {
         Parser();
-        int _pos = 0;
+        Queue* _tokens;
+        List* _queueStack;
+        Triple* _expectedClose;
         std::string _inputString;
         std::stringstream _lexeme;
-        Queue* _tokens;
+        int _pos = 0;
         int _iValue = 0;
         int _rFrac = 0;
         int _rDivisor = 1;

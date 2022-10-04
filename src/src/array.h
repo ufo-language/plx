@@ -4,7 +4,11 @@
 
 namespace plx {
 
+    struct Queue;
+
     struct Array : public Any {
+        static Array* fromQueue(Queue* q);
+        Array(int count);
         Array(int count, Any** elems);
         int _count;
         Any** _elems;
