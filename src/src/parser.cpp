@@ -65,27 +65,39 @@ namespace plx {
         return new Symbol(name);
     }
 
+    static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
+        Triple* triple = parser->_expectedClose;
+        Symbol* exceptionSymbol = new Symbol(reason);
+        Integer* charInt = (Integer*)triple->_key;
+        String* expectedCharStr = new String(std::string(1, (char)charInt->_value));
+        Integer* startPosInt = (Integer*)triple->_value;
+        Integer* currentPostInt = new Integer(parser->_pos);
+        List* startPos = new List(new Symbol("StartPos"), startPosInt);
+        List* currentPos = new List(new Symbol("CurrentPos"), currentPostInt);
+        List* expectedChar = new List(new Symbol("ExpectedChar"), expectedCharStr);
+        Any** elems = new Any*[4]{exceptionSymbol,
+                                  startPos,
+                                  currentPos,
+                                  expectedChar};
+        Array* exnAry = new Array(4, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+        parser->_lexeme.str(std::string());
+        parser->_pos = 0;
+    }
+
     static bool _checkClose(Evaluator* etor, Parser* parser, char expectedChar) {
         Triple* closeTriple = parser->_expectedClose;
         if (closeTriple->isEmpty()) {
-            Symbol* exceptionSymbol = new Symbol("ClosingCharacterNotExpected");
-            Any** elems = new Any*[3]{exceptionSymbol,
-                                      new String(std::string(1, expectedChar)),
-                                      new Integer(parser->_pos)};
-            Array* exnAry = new Array(2, elems);
-            etor->_exception = exnAry;
-            etor->_status = ES_Exception;
+            parser->_expectedClose = new Triple(new Integer(expectedChar),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            _parseException("ClosingCharacterNotExpected", parser, etor);
             return false;
         }
         Integer* pushedCloseChar = (Integer*)closeTriple->_key;
         if (pushedCloseChar->_value != (int)expectedChar) {
-            Symbol* exceptionSymbol = new Symbol("ClosingCharacterExpected");
-            Any** elems = new Any*[3]{exceptionSymbol,
-                                      new String(std::string(1, pushedCloseChar->_value)),
-                                      new Integer(parser->_pos)};
-            Array* exnAry = new Array(3, elems);
-            etor->_exception = exnAry;
-            etor->_status = ES_Exception;
+            _parseException("ClosingCharacterExpected", parser, etor);
             return false;
         }
         parser->_expectedClose = closeTriple->_next;
@@ -159,10 +171,14 @@ namespace plx {
     static void _parseString(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
-        if (c == '\"') {
+        if (c == '"') {
             contin->_continFun = _parse;
             String* s = new String(parser->_lexeme.str());
+            parser->_expectedClose = parser->_expectedClose->_next;
             _addToken(parser, s);
+        }
+        else if (c == '\0') {
+            contin->_continFun = _parse;
         }
         else {
             parser->_lexeme << c;
@@ -206,6 +222,9 @@ namespace plx {
         else if (c == '"') {
             contin->_name = "parser:string";
             contin->_continFun = _parseString;
+            parser->_expectedClose = new Triple(new Integer('"'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
             etor->pushExpr(contin);
         }
         else if (c == '(') {
@@ -242,9 +261,14 @@ namespace plx {
             _makeArray(etor, parser, contin);
         }
         else if (c == '\0') {
-            // EOI
-            Any* token = parser->_tokens->_first;
-            etor->pushObj(token);
+            if (!parser->_expectedClose->isEmpty()) {
+                _parseException("MissingTerminator", parser, etor);
+            }
+            else {
+                // EOI
+                Any* token = parser->_tokens->_first;
+                etor->pushObj(token);
+            }
         }
     }
 

@@ -74,7 +74,7 @@ namespace plx {
                 list = (List*)list->_rest;
             }
             else {
-                stream << list->_rest;
+                stream << " | " << list->_rest;
                 break;
             }
         }
