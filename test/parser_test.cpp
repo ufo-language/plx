@@ -6,17 +6,11 @@
 #include "src/evaluator.h"
 #include "src/integer.h"
 #include "src/list.h"
-#include "src/parser2.h"
+#include "src/parser.h"
 #include "src/string.h"
 #include "src/symbol.h"
 
 namespace plx {
-
-    void runEvaluator(Evaluator* etor) {
-        while (etor->_status == ES_Running) {
-            etor->step();
-        }
-    }
 
     TEST_CASE("parser", "[parser]") {
         std::cerr << "parser_test starting\n";
@@ -30,7 +24,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -49,7 +43,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -68,7 +62,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -87,7 +81,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -106,7 +100,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -137,7 +131,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -156,7 +150,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;
@@ -183,7 +177,7 @@ namespace plx {
             List* args = new List(inputString);
             etor->pushObj(args);
             parser->parse(etor);
-            runEvaluator(etor);
+            etor->run();
             Any* res = etor->popObj();
             REQUIRE(res->_typeId == T_List);
             List* tokens = (List*)res;

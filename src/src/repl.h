@@ -1,9 +1,17 @@
 #pragma once
 
+#include <string>
+
 namespace plx {
 
+    struct Any;
+    struct List;
+    struct Parser;
+    struct Evaluator;
+
     struct REPL {
-        int loop(void);
+        int loop();
+        List* _parse(const std::string& line, Parser* parser, Evaluator* etor);
     };
 
 }

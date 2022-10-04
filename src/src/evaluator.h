@@ -26,6 +26,7 @@ namespace plx {
         void pushExpr(Any* expr);
         void pushExpr(Any* expr, Triple* env);
         void pushObj(Any* obj);
+        void run();
         void show(std::ostream& stream);
         void step();
     };

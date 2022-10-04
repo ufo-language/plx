@@ -119,6 +119,13 @@ namespace plx {
         _ostack = new List(obj, _ostack);
     }
 
+    void Evaluator::run() {
+        std::cout << "Evaluator::run this = " << this << "\n";
+        while (_status == ES_Running) {
+            step();
+        }
+    }
+
     void Evaluator::show(std::ostream& stream) {
         stream << "[Evaluator "
                << _ostack

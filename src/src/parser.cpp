@@ -1,159 +1,271 @@
-#include <sstream>
-
-#include "src/any.h"
-#include "src/apply.h"
-#include "src/boolean.h"
-#include "src/integer.h"
-#include "src/list.h"
-#include "src/nil.h"
-#include "src/queue.h"
-#include "src/real.h"
-#include "src/string.h"
-#include "src/symbol.h"
+#include "apply.h"
+#include "array.h"
+#include "continuation.h"
+#include "evaluator.h"
+#include "integer.h"
+#include "list.h"
+#include "nil.h"
+#include "parser.h"
+#include "queue.h"
+#include "string.h"
+#include "symbol.h"
+#include "triple.h"
 
 namespace plx {
 
-    enum ParseState {
-        PS_Init,
-        PS_Integer,
-        PS_Real,
-        PS_String,
-        PS_Symbol
-    };
-
-    Any* parseSymbol(const std::string& name) {
-        if (name == "nil") { return new Nil(); }
-        if (name == "true") { return new Boolean(true); }
-        if (name == "false") { return new Boolean(false); }
-        return new Symbol(name);
+    Parser::Parser()
+        : Any{T_Parser} {
     }
 
-    static List* _parse(const std::string& inputString, int index);
+    static void _parse(Evaluator* etor, Any* arg, Continuation* contin);
 
-    List* parse(const std::string& inputString) {
-        return _parse(inputString, 0);
+    void Parser::parse(const std::string& inputString, Evaluator* etor) {
+        String* string = new String(inputString);
+        parse(string, etor);
     }
 
-    static List* _parse(const std::string& inputString, int index) {
-        ParseState parseState = PS_Init;
-        std::stringstream lexeme;
-        bool contin = true;
-        Queue* expr = new Queue();
-        List* exprStack = new List();
-        int iValue = 0;
-        int rFrac = 0;
-        int rDivisor = 1;
-        bool parsingApplication = false;
-        Any* token = nullptr;
-        while (contin) {
-            char c = inputString[index++];
-            //std::cout << "_parse state = " << parseState << ", c = '" << c << "', lexeme = '" << lexeme.str() << "'\n";
-            switch (parseState) {
-                case PS_Init:
-                    if (c == '\0') { contin = false; }
-                    else if (std::isalpha(c)) { lexeme << c; parseState = PS_Symbol; }
-                    else if (std::isblank(c)) {}
-                    else if (std::isdigit(c)) { iValue = c - '0'; parseState = PS_Integer; }
-                    else if (c == '"') { parseState = PS_String; }
-                    else if (c == '[') {
-                        exprStack = new List(expr, exprStack);
-                        expr = new Queue();
-                        lexeme = std::stringstream();
-                    }
-                    else if (c == ']') {
-                        token = expr->_first;
-                        expr = (Queue*)exprStack->_first;
-                        exprStack = (List*)exprStack->_rest;
-                        goto MAKE_TOKEN;
-                    }
-                    else if (c == Apply::START_CHAR) {
-                        exprStack = new List(expr, exprStack);
-                        expr = new Queue();
-                        lexeme = std::stringstream();
-                        parsingApplication = true;
-                    }
-                    else if (c == Apply::STOP_CHAR) {
-                        if (!parsingApplication) {
-                            std::cerr << "PS_Init ending token '" << Apply::STOP_CHAR
-                                << "' with no start token '" << Apply::START_CHAR << "'\n";
-                            return nullptr;
-                        }
-                        if (expr->_count == 0) {
-                            std::cerr << "PS_Init empty application\n";
-                            return nullptr;
-                        }
-                        Any* abstr = expr->_first->_first;
-                        List* appArgs = (List*)expr->_first->_rest;
-                        token = new Apply(abstr, appArgs);
-                        expr = (Queue*)exprStack->_first;
-                        exprStack = (List*)exprStack->_rest;
-                        parsingApplication = false;
-                        goto MAKE_TOKEN;
-                    }
-                    else {
-                        std::cerr << "PS_Init unhandled character '" << c << "'\n";
-                        return nullptr;
-                    }
-                    break;
-                case PS_Integer:
-                    if (std::isdigit(c)) {
-                        iValue = iValue * 10 + (c - '0');
-                    }
-                    else if (c == '.') {
-                        parseState = PS_Real;
-                    }
-                    else {
-                        token = new Integer(iValue);
-                        iValue = 0;
-                        index--;
-                        goto MAKE_TOKEN;
-                    }
-                    break;
-                case PS_Real:
-                    if (std::isdigit(c)) {
-                        rFrac = rFrac * 10.0 + (c - '0');
-                        rDivisor *= 10;
-                    }
-                    else {
-                        double rValue = ((double)iValue) + ((double)rFrac / (double)(rDivisor));
-                        Real* real = new Real(rValue);
-                        expr->enq(real);
-                        rValue = 0;
-                        rFrac = 0;
-                        index--;
-                        goto MAKE_TOKEN;
-                    }
-                    break;
-                case PS_String:
-                    if (c == '\"') {
-                        token = new String(lexeme.str());
-                        goto MAKE_TOKEN;
-                    }
-                    else {
-                        lexeme << c;
-                    }
-                    break;
-                case PS_Symbol:
-                    if (std::isalpha(c)) {
-                        lexeme << c;
-                    }
-                    else {
-                        index--;
-                        token = parseSymbol(lexeme.str());
-                        goto MAKE_TOKEN;
-                    }
-                    break;
-            }
-            continue;
-        MAKE_TOKEN:
-            expr->enq(token);
-            lexeme.str(std::string());
-            parseState = PS_Init;
-        }  // end while loop
-        if (parseState != PS_Init) {
-            std::cerr << "Parse error\n";
+    void Parser::parse(String* inputString, Evaluator* etor) {
+        List* args = new List(inputString);
+        etor->pushObj(args);
+        parse(etor);
+    }
+
+    void Parser::parse(Evaluator* etor) {
+        _tokens = new Queue();
+        _queueStack = new List();
+        _expectedClose = new Triple();
+        _pos = 0;
+        etor->_status = ES_Running;
+        List* args = (List*)etor->popObj();
+        String* str = (String*)args->_first;
+        _inputString = str->_str;
+        Continuation* contin = new Continuation("parser:parse", _parse, this);
+        etor->pushExpr(contin);
+    }
+
+    // NB These functions must be plain functions and not C++ member functions
+    // because they're stored in Continuation instances.
+
+    static void _addToken(Parser* parser, Any* token) {
+        parser->_tokens->enq(token);
+        parser->_lexeme.str(std::string());
+    }
+
+    static void _makeApplication(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("ClosingParenhesisNotExcpected");
+            goto EXCEPTION;
         }
-        return expr->_first;
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != ')') {
+                exceptionSymbol = new Symbol("ClosingParenthesisExcpected");
+                goto EXCEPTION;
+            }
+            List* tokens = parser->_tokens->_first;
+            Any* appObj;
+            if (tokens->isEmpty()) {
+                appObj = new Nil();
+            }
+            else {
+                Any* abstrObj = tokens->_first;
+                Any* restObj = tokens->_rest;
+                if (restObj->_typeId != T_List) {
+                    exceptionSymbol = new Symbol("ProperListExpected");
+                    goto EXCEPTION;
+                }
+                List* args = (List*)restObj;
+                appObj = new Apply(abstrObj, args);
+            }
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(appObj);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
+
+    static void _makeArray(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("ClosingBraceNotExcpected");
+            goto EXCEPTION;
+        }
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != '}') {
+                exceptionSymbol = new Symbol("ClosingBraceExcpected");
+                goto EXCEPTION;
+            }
+            Array* ary = Array::fromQueue(parser->_tokens);
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(ary);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
+
+    static void _makeList(Evaluator* etor, Parser* parser, Continuation* contin) {
+        Triple* closeTriple = parser->_expectedClose;
+        Symbol* exceptionSymbol = nullptr;
+        if (closeTriple->isEmpty()) {
+            exceptionSymbol = new Symbol("ClosingBracketNotExpected");
+            goto EXCEPTION;
+        }
+        else {
+            Integer* expectedCloseChar = (Integer*)closeTriple->_key;
+            if (expectedCloseChar->_value != ']') {
+                exceptionSymbol = new Symbol("ClosingBracketExpected");
+                goto EXCEPTION;
+            }
+            List* list = parser->_tokens->_first;
+            parser->_tokens = (Queue*)parser->_queueStack->_first;
+            parser->_queueStack = (List*)parser->_queueStack->_rest;
+            parser->_tokens->enq(list);
+            etor->pushExpr(contin);
+        }
+        return;
+    EXCEPTION:
+        Any** elems = new Any*[3]{exceptionSymbol,
+                                  closeTriple->_key,
+                                  closeTriple->_value};
+        Array* exnAry = new Array(3, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
+    }
+
+    static void _parseNumber(Evaluator* etor, Any* arg, Continuation* contin) {
+        Parser* parser = (Parser*)arg;
+        char c = parser->_inputString[parser->_pos++];
+        if (isdigit(c)) {
+            parser->_iValue = parser->_iValue * 10 + (c - '0');
+        }
+        else {
+            parser->_pos--;
+            contin->_continFun = _parse;
+            Integer* i = new Integer(parser->_iValue);
+            _addToken(parser, i);
+        }
+        etor->pushExpr(contin);
+    }
+
+    static void _parseString(Evaluator* etor, Any* arg, Continuation* contin) {
+        Parser* parser = (Parser*)arg;
+        char c = parser->_inputString[parser->_pos++];
+        if (c == '\"') {
+            contin->_continFun = _parse;
+            String* s = new String(parser->_lexeme.str());
+            _addToken(parser, s);
+        }
+        else {
+            parser->_lexeme << c;
+        }
+        etor->pushExpr(contin);
+    }
+
+    static void _parseSymbol(Evaluator* etor, Any* arg, Continuation* contin) {
+        Parser* parser = (Parser*)arg;
+        char c = parser->_inputString[parser->_pos++];
+        if (isalpha(c)) {
+            parser->_lexeme << c;
+        }
+        else {
+            parser->_pos--;
+            contin->_continFun = _parse;
+            Symbol* s = new Symbol(parser->_lexeme.str());
+            _addToken(parser, s);
+        }
+        etor->pushExpr(contin);
+    }
+
+    static void _parse(Evaluator* etor, Any* arg, Continuation* contin) {
+        Parser* parser = (Parser*)arg;
+        char c = parser->_inputString[parser->_pos++];
+        if (isalpha(c)) {
+            parser->_lexeme << c;
+            contin->_name = "parser:symbol";  // TODO after this all works, don't bother changing the name of the parser anywhere
+            contin->_continFun = _parseSymbol;
+            etor->pushExpr(contin);
+        }
+        else if (isdigit(c)) {
+            parser->_iValue = c - '0';
+            contin->_name = "parser:number";
+            contin->_continFun = _parseNumber;
+            etor->pushExpr(contin);
+        }
+        else if (isblank(c)) {
+            etor->pushExpr(contin);
+        }
+        else if (c == '"') {
+            contin->_name = "parser:string";
+            contin->_continFun = _parseString;
+            etor->pushExpr(contin);
+        }
+        else if (c == '(') {
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer(')'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == ')') {
+            _makeApplication(etor, parser, contin);
+        }
+        else if (c == '[') {
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer(']'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == ']') {
+            _makeList(etor, parser, contin);
+        }
+        else if (c == '{') {
+            parser->_queueStack = new List(parser->_tokens, parser->_queueStack);
+            parser->_tokens = new Queue();
+            parser->_expectedClose = new Triple(new Integer('}'),
+                                                new Integer(parser->_pos),
+                                                parser->_expectedClose);
+            etor->pushExpr(contin);
+        }
+        else if (c == '}') {
+            _makeArray(etor, parser, contin);
+        }
+        else if (c == '\0') {
+            // EOI
+            Any* token = parser->_tokens->_first;
+            etor->pushObj(token);
+        }
+    }
+
+    void Parser::show(std::ostream& stream) {
+        stream << "Parser{"
+               << "inputString='" << _inputString
+               << "', pos=" << _pos
+               << ", lexeme='" << _lexeme.str()
+               << "', tokens=" << _tokens
+               << "}";
     }
 
 }
