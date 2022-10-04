@@ -1,5 +1,6 @@
 #include "apply.h"
 #include "array.h"
+#include "boolean.h"
 #include "continuation.h"
 #include "evaluator.h"
 #include "integer.h"
@@ -49,6 +50,19 @@ namespace plx {
     static void _addToken(Parser* parser, Any* token) {
         parser->_tokens->enq(token);
         parser->_lexeme.str(std::string());
+    }
+
+    static Any* _checkSymbol(const std::string& name) {
+        if (name == "true") {
+            return new Boolean(true);
+        }
+        if (name == "false") {
+            return new Boolean(false);
+        }
+        if (name == "nil") {
+            return new Nil();
+        }
+        return new Symbol(name);
     }
 
     static void _makeApplication(Evaluator* etor, Parser* parser, Continuation* contin) {
@@ -194,8 +208,8 @@ namespace plx {
         else {
             parser->_pos--;
             contin->_continFun = _parse;
-            Symbol* s = new Symbol(parser->_lexeme.str());
-            _addToken(parser, s);
+            Any* token = _checkSymbol(parser->_lexeme.str());
+            _addToken(parser, token);
         }
         etor->pushExpr(contin);
     }
