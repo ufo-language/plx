@@ -1,6 +1,8 @@
-#include "src/array.h"
-#include "src/evaluator.h"
-#include "src/symbol.h"
+#include "any.h"
+#include "array.h"
+#include "evaluator.h"
+#include "symbol.h"
+#include "triple.h"
 
 namespace plx {
 
@@ -18,6 +20,11 @@ namespace plx {
     bool Symbol::isEqual(Any* other) {
         Symbol* otherSym = (Symbol*)other;
         return _name == otherSym->_name;
+    }
+
+ 
+    Triple* Symbol::match(Any* other, Triple* env) {
+        return new Triple(this, other, env);
     }
 
 }

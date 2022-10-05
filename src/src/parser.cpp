@@ -67,7 +67,8 @@ namespace plx {
 
     static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
         Triple* triple = parser->_expectedClose;
-        Symbol* exceptionSymbol = new Symbol(reason);
+        Symbol* typeSymbol = new Symbol("Parser");
+        String* reasonString = new String(reason);
         Integer* charInt = (Integer*)triple->_key;
         String* expectedCharStr = new String(std::string(1, (char)charInt->_value));
         Integer* startPosInt = (Integer*)triple->_value;
@@ -75,11 +76,12 @@ namespace plx {
         List* startPos = new List(new Symbol("StartPos"), startPosInt);
         List* currentPos = new List(new Symbol("CurrentPos"), currentPostInt);
         List* expectedChar = new List(new Symbol("ExpectedChar"), expectedCharStr);
-        Any** elems = new Any*[4]{exceptionSymbol,
+        Any** elems = new Any*[5]{typeSymbol,
+                                  reasonString,
                                   startPos,
                                   currentPos,
                                   expectedChar};
-        Array* exnAry = new Array(4, elems);
+        Array* exnAry = new Array(5, elems);
         etor->_exception = exnAry;
         etor->_status = ES_Exception;
         parser->_lexeme.str(std::string());
@@ -92,12 +94,12 @@ namespace plx {
             parser->_expectedClose = new Triple(new Integer(expectedChar),
                                                 new Integer(parser->_pos),
                                                 parser->_expectedClose);
-            _parseException("ClosingCharacterNotExpected", parser, etor);
+            _parseException("Closing character not expected", parser, etor);
             return false;
         }
         Integer* pushedCloseChar = (Integer*)closeTriple->_key;
         if (pushedCloseChar->_value != (int)expectedChar) {
-            _parseException("ClosingCharacterExpected", parser, etor);
+            _parseException("Closing character expected", parser, etor);
             return false;
         }
         parser->_expectedClose = closeTriple->_next;
@@ -262,7 +264,7 @@ namespace plx {
         }
         else if (c == '\0') {
             if (!parser->_expectedClose->isEmpty()) {
-                _parseException("MissingTerminator", parser, etor);
+                _parseException("Missing terminator", parser, etor);
             }
             else {
                 // EOI
