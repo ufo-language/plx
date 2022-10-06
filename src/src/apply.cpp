@@ -7,71 +7,68 @@
 #include "list.h"
 #include "nil.h"
 #include "primitive.h"
+#include "string.h"
 #include "symbol.h"
 #include "triple.h"
+
+#include <cassert>
 
 namespace plx {
 
     void doContin(Evaluator* etor, Any* arg, Continuation* contin);
 
-#if 0
-    static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
-        Triple* triple = parser->_expectedClose;
-        Symbol* typeSymbol = new Symbol("Parser");
-        String* reasonString = new String(reason);
-        Integer* charInt = (Integer*)triple->_key;
-        String* expectedCharStr = new String(std::string(1, (char)charInt->_value));
-        Integer* startPosInt = (Integer*)triple->_value;
-        Integer* currentPostInt = new Integer(parser->_pos);
-        List* startPos = new List(new Symbol("StartPos"), startPosInt);
-        List* currentPos = new List(new Symbol("CurrentPos"), currentPostInt);
-        List* expectedChar = new List(new Symbol("ExpectedChar"), expectedCharStr);
-        Any** elems = new Any*[5]{typeSymbol,
-                                  reasonString,
-                                  startPos,
-                                  currentPos,
-                                  expectedChar};
+    void _paramArgMismatchException(Any* fun, Any* param, Any* arg, Evaluator* etor) {
+        Symbol* typeSymbol = new Symbol("Apply");
+        String* reasonString = new String("parameter/argument mismatch");
+        Any** elems = new Any*[5]{typeSymbol, reasonString, fun, param, arg};
         Array* exnAry = new Array(5, elems);
         etor->_exception = exnAry;
         etor->_status = ES_Exception;
-        parser->_lexeme.str(std::string());
-        parser->_pos = 0;
     }
-#endif
-    
-    void _applyException() {
+
+    void _tooManyArgsException(Any* fun, List* args, Evaluator* etor) {
+        Symbol* typeSymbol = new Symbol("Apply");
+        String* reasonString = new String("too many arguments");
+        Any** elems = new Any*[4]{typeSymbol, reasonString, fun, args};
+        Array* exnAry = new Array(4, elems);
+        etor->_exception = exnAry;
+        etor->_status = ES_Exception;
     }
 
     void _applyFunction(Evaluator* etor, Any* arg, Continuation* contin) {
         (void)contin;
         Function* fun = (Function*)arg;
-        List* args = (List*)etor->popObj();
+        List* allArgs = (List*)etor->popObj();
+        List* args = allArgs;
         List* params = fun->_params;
         Triple* env = fun->_lexEnv;
-        // bind args to params
+        // this whole while loop is just to bind args to params
         while (true) {
             if (args->isEmpty()) {
-                if (!params->isEmpty()) {
-                    // return a new function
-                    Function* fun1 = new Function(params, fun->_body, env);
-                    etor->pushObj(fun1);
-                    return;
-                }
-                else {
+                if (params->isEmpty()) {
                     // all params & args match
                     break;
                 }
+                // return a curried function
+                Function* fun1 = new Function(params, fun->_body, env);
+                etor->pushObj(fun1);
+                return;
             }
             if (params->isEmpty()) {
                 // too many arguments
+                _tooManyArgsException(fun, allArgs, etor);
+                return;
             }
             Any* param = params->_first;
             Any* arg = args->_first;
             env = param->match(arg, env);
             if (env == nullptr) {
                 // parameter/argument mismatch
+                _paramArgMismatchException(fun, param, arg, etor);
+                return;
             }
             params = (List*)params->_rest;
+            assert(params != nullptr);
             args = (List*)args->_rest;
         }
         // evaluate the function body
@@ -121,7 +118,11 @@ namespace plx {
 
     void Apply::show(std::ostream& stream) {
         stream << START_CHAR << _abstr;
-        _args->showWith(stream, " ", std::string(1, STOP_CHAR));
+        if (!_args->isEmpty()) {
+            stream << ' ';
+            _args->showWith(stream, "", "");
+        }
+        stream << STOP_CHAR;
     }
 
 }
