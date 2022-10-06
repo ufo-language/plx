@@ -1,13 +1,13 @@
-#include "src/any.h"
-#include "src/continuation.h"
-#include "src/evaluator.h"
-#include "src/function.h"
-#include "src/list.h"
-#include "src/nil.h"
-#include "src/primitive.h"
-#include "src/queue.h"
-#include "src/symbol.h"
-#include "src/triple.h"
+#include "any.h"
+#include "continuation.h"
+#include "evaluator.h"
+#include "function.h"
+#include "identifier.h"
+#include "list.h"
+#include "nil.h"
+#include "primitive.h"
+#include "queue.h"
+#include "triple.h"
 
 namespace plx {
 
@@ -21,12 +21,12 @@ namespace plx {
 
     static void definePrim(const std::string& name, PrimFun primFun, Evaluator* etor) {
         Primitive* prim = new Primitive(name, T_Prim, primFun);
-        etor->bind(new Symbol(name), prim);
+        etor->bind(new Identifier(name), prim);
     }
     
     static void defineMacro(const std::string& name, PrimFun primFun, Evaluator* etor) {
         Primitive* prim = new Primitive(name, T_PrimMacro, primFun);
-        etor->bind(new Symbol(name), prim);
+        etor->bind(new Identifier(name), prim);
     }
     
     void prim_defineAll(Evaluator* etor) {
@@ -80,10 +80,10 @@ namespace plx {
     static void prim_fun(Evaluator* etor) {
         List* parts = (List*)etor->popObj();
         Any* firstPart = parts->_first;
-        Symbol* name = nullptr;
+        Identifier* name = nullptr;
         Triple* envTriple = etor->_env;
-        if (firstPart->_typeId == T_Symbol) {
-            name = (Symbol*)firstPart;
+        if (firstPart->_typeId == T_Identifier) {
+            name = (Identifier*)firstPart;
             envTriple = etor->bind(name, new Nil());
             parts = (List*)parts->_rest;
         }
@@ -120,7 +120,7 @@ namespace plx {
         int nNames = nameQueue->_count;
         List* nameList = (List*)nameQueue->_first;
         while (nNames-- > 0) {
-            Symbol* name = (Symbol*)nameList->_first;
+            Identifier* name = (Identifier*)nameList->_first;
             Any* value = etor->popObj();
             etor->bind(name, value);
             nameList = (List*)nameList->_rest;
