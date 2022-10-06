@@ -1,6 +1,7 @@
 #pragma once
 
-#include "src/any.h"
+#include "identifier.h"
+#include "triple.h"
 
 namespace plx {
 
@@ -9,7 +10,7 @@ namespace plx {
         const std::string _name;
         void evaluate(Evaluator* etor) override;
         bool isEqual(Any* other) override { return _name == ((Identifier*)other)->_name; }
-        Triple* match(Any* other, Triple* env) override { new Triple(this, other, env); }
+        Triple* match(Any* other, Triple* env) override { return new Triple(this, other, env); }
         void show(std::ostream& stream) override { stream << _name; }
     };
 
