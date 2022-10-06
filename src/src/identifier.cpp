@@ -17,13 +17,4 @@ namespace plx {
         etor->pushObj(value);
     }
 
-    bool Identifier::isEqual(Any* other) {
-        Identifier* otherSym = (Identifier*)other;
-        return _name == otherSym->_name;
-    }
-
-    Triple* Identifier::match(Any* other, Triple* env) {
-        return new Triple(this, other, env);
-    }
-
 }
