@@ -56,7 +56,7 @@ namespace plx {
             REQUIRE(str->_str == s);
         }
 
-        SECTION("parse symbol", "[symbol]") {
+        SECTION("parse identifier", "[identifier]") {
             std::string s = "xyz";
             String* inputString = new String(s);
             List* args = new List(inputString);
@@ -70,7 +70,7 @@ namespace plx {
             REQUIRE(tokens->_rest->_typeId == T_List);
             REQUIRE(((List*)tokens->_rest)->isEmpty());
             Any* firstToken = tokens->_first;
-            REQUIRE(firstToken->_typeId == T_Symbol);
+            REQUIRE(firstToken->_typeId == T_Identifier);
             Symbol* sym = (Symbol*)firstToken;
             REQUIRE(sym->_name == s);
         }
