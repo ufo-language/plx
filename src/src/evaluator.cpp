@@ -2,10 +2,10 @@
 
 #include "src/evaluator.h"
 #include "src/exceptionhandler.h"
+#include "identifier.h"
 #include "src/list.h"
 #include "src/primitives.h"
 #include "src/triple.h"
-
 
 namespace plx {
 
@@ -81,7 +81,7 @@ namespace plx {
         return false;
     }
 
-    Any* Evaluator::lookup(Symbol* name) {
+    Any* Evaluator::lookup(Identifier* name) {
         Triple* binding = _env->locate(name);
         if (binding != nullptr) {
             return binding->_value;

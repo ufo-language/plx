@@ -50,7 +50,7 @@ namespace plx {
         etor->pushObj(new Nil());
     }
 
-    static void _doContin(Evaluator* etor, Any* arg, Continuation* contin) {
+    void doContin(Evaluator* etor, Any* arg, Continuation* contin) {
         etor->popObj();
         List* args = (List*)arg;
         if (args->isEmpty()) {
@@ -72,7 +72,7 @@ namespace plx {
 
     static void prim_do(Evaluator* etor) {
         List* args = (List*)etor->popObj();
-        Continuation* contin = new Continuation("do", _doContin, args);
+        Continuation* contin = new Continuation("do", doContin, args);
         etor->pushExpr(contin);
         etor->pushObj(new Nil());
     }

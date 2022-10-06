@@ -5,8 +5,8 @@
 namespace plx {
 
     struct Any;
+    struct Identifier;
     struct List;
-    struct Symbol;
     struct Triple;
 
     struct Evaluator : public Any {
@@ -20,7 +20,7 @@ namespace plx {
         void evaluate(List* exprList);
         void evaluate(int nSteps);
         bool findExceptionHandler();
-        Any* lookup(Symbol* name);
+        Any* lookup(Identifier* name);
         Any* popExpr();
         Any* popObj();
         void pushExpr(Any* expr);

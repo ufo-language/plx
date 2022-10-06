@@ -16,6 +16,7 @@ namespace plx {
         T_Evaluator,
         T_ExceptionHandler,
         T_Function,
+        T_Identifier,
         T_Integer,
         T_List,
         T_Nil,

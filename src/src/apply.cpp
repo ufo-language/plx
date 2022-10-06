@@ -5,11 +5,14 @@
 #include "evaluator.h"
 #include "function.h"
 #include "list.h"
+#include "nil.h"
 #include "primitive.h"
 #include "symbol.h"
 #include "triple.h"
 
 namespace plx {
+
+    void doContin(Evaluator* etor, Any* arg, Continuation* contin);
 
 #if 0
     static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
@@ -47,17 +50,20 @@ namespace plx {
         Triple* env = fun->_lexEnv;
         // bind args to params
         while (true) {
-            if (params->isEmpty()) {
-                if (!args->isEmpty()) {
-                    // return a new application
+            if (args->isEmpty()) {
+                if (!params->isEmpty()) {
+                    // return a new function
+                    Function* fun1 = new Function(params, fun->_body, env);
+                    etor->pushObj(fun1);
+                    return;
                 }
                 else {
                     // all params & args match
                     break;
                 }
             }
-            if (args->isEmpty()) {
-                // missing arguments for parameters
+            if (params->isEmpty()) {
+                // too many arguments
             }
             Any* param = params->_first;
             Any* arg = args->_first;
@@ -68,7 +74,10 @@ namespace plx {
             params = (List*)params->_rest;
             args = (List*)args->_rest;
         }
-        etor->pushExpr(fun->_body, env);
+        // evaluate the function body
+        Continuation* contin1 = new Continuation("apply", doContin, fun->_body);
+        etor->pushExpr(contin1, env);
+        etor->pushObj(new Nil());
     }
 
     void _applyPrim(Evaluator* etor, Any* arg, Continuation* contin) {

@@ -3,6 +3,7 @@
 #include "boolean.h"
 #include "continuation.h"
 #include "evaluator.h"
+#include "identifier.h"
 #include "integer.h"
 #include "list.h"
 #include "nil.h"
@@ -62,7 +63,10 @@ namespace plx {
         if (name == "nil") {
             return new Nil();
         }
-        return new Symbol(name);
+        if (name[0] >= 'A' && name[0] <= 'Z') {
+            return new Symbol(name);
+        }
+        return new Identifier(name);    
     }
 
     static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
