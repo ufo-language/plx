@@ -51,9 +51,9 @@ namespace plx {
         bool _isMarked;
         virtual bool boolValue() { return true; }
         virtual void display(std::ostream& stream) { show(stream); }
+        virtual void evaluate(Evaluator* etor);
         static bool IsEqual(Any* self, Any* other);
         virtual bool isEqual(Any* other) { (void)other; return false; }
-        virtual void evaluate(Evaluator* etor);
         virtual Triple* match(Any* other, Triple* env);
         virtual void show(std::ostream& stream) = 0;
         friend std::ostream & operator<<(std::ostream &stream, Any* object);
