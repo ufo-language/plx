@@ -10,7 +10,7 @@
 namespace plx {
 
     Evaluator::Evaluator()
-        : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()}, _status{ES_Running}, _exception{nullptr} {
+        : Any{T_Evaluator}, _ostack{new List()}, _estack{new Triple()}, _env{new Triple()} {
     }
 
     Triple* Evaluator::bind(Any* name, Any* value) {
@@ -120,7 +120,6 @@ namespace plx {
     }
 
     void Evaluator::run() {
-        std::cout << "Evaluator::run this = " << this << "\n";
         while (_status == ES_Running) {
             step();
         }
@@ -141,7 +140,9 @@ namespace plx {
             _status = ES_Terminated;
         }
         else {
-            std::cout << "Evaluator::step expr = " << expr << "\n";
+            if (_showStep) {
+                std::cout << "Evaluator::step expr = " << expr << "\n";
+            }
             expr->evaluate(this);
         }
     }

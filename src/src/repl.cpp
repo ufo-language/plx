@@ -35,7 +35,6 @@ namespace plx {
                 break;
             case ES_Terminated:
                 exprList = (List*)etor->popObj();
-                std::cout << "parse exprs = " << exprList << '\n';
                 break;
         }
         return exprList;
@@ -67,7 +66,6 @@ namespace plx {
             printf("plx> ");
             std::string line;
             if (std::getline(std::cin, line)) {
-                std::cout << "input string = '" << line << "'\n";
                 if (line.length() > 0) {
                     List* exprList = _parse(line, parser, etor);
                     if (exprList != nullptr) {

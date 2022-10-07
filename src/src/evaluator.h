@@ -14,8 +14,9 @@ namespace plx {
         List* _ostack;
         Triple* _estack;
         Triple* _env;
-        EvaluatorStatus _status;
-        Any* _exception;
+        EvaluatorStatus _status = ES_Running;
+        Any* _exception = nullptr;
+        bool _showStep = false;
         Triple* bind(Any* name, Any* value);
         void evaluate(List* exprList);
         void evaluate(int nSteps);
