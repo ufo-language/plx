@@ -1,6 +1,6 @@
-#include "src/continuation.h"
-#include "src/evaluator.h"
-#include "src/list.h"
+#include "continuation.h"
+#include "evaluator.h"
+#include "list.h"
 
 namespace plx {
 

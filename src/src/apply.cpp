@@ -39,6 +39,7 @@ namespace plx {
         (void)contin;
         Function* fun = (Function*)arg;
         List* allArgs = (List*)etor->popObj();
+#if 0
         List* args = allArgs;
         List* params = fun->_params;
         Triple* env = fun->_lexEnv;
@@ -55,7 +56,6 @@ namespace plx {
                 return;
             }
             if (params->isEmpty()) {
-                // too many arguments
                 _tooManyArgsException(fun, allArgs, etor);
                 return;
             }
@@ -63,7 +63,6 @@ namespace plx {
             Any* arg = args->_first;
             env = param->match(arg, env);
             if (env == nullptr) {
-                // parameter/argument mismatch
                 _paramArgMismatchException(fun, param, arg, etor);
                 return;
             }
@@ -75,6 +74,9 @@ namespace plx {
         Continuation* contin1 = new Continuation("apply", doContin, fun->_body);
         etor->pushExpr(contin1, env);
         etor->pushObj(new Nil());
+#else
+        fun->apply(allArgs, etor);
+#endif
     }
 
     void _applyPrim(Evaluator* etor, Any* arg, Continuation* contin) {

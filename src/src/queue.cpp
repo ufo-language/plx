@@ -1,8 +1,8 @@
-#include "src/array.h"
-#include "src/evaluator.h"
-#include "src/list.h"
-#include "src/queue.h"
-#include "src/symbol.h"
+#include "array.h"
+#include "evaluator.h"
+#include "list.h"
+#include "queue.h"
+#include "symbol.h"
 
 namespace plx {
 

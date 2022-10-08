@@ -1,6 +1,10 @@
 #pragma once
 
+#include "any.h"
+
 namespace plx {
+
+    struct Evaluator;
 
     struct ExceptionHandler : public Any {
         ExceptionHandler(Any* pattern, Any* body) : Any{T_ExceptionHandler}, _pattern{pattern}, _body{body} {}

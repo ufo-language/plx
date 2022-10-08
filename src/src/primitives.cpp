@@ -1,4 +1,7 @@
+#include <cstdlib>
+
 #include "any.h"
+#include "boolean.h"
 #include "continuation.h"
 #include "evaluator.h"
 #include "function.h"
@@ -7,48 +10,44 @@
 #include "nil.h"
 #include "primitive.h"
 #include "queue.h"
+#include "string.h"
 #include "triple.h"
 
 namespace plx {
 
-    static void prim_disp(Evaluator* etor);
+    // functions defined in other cpp files
+    void prim_dl_open(Evaluator* etor);  // in prim_dl.cpp
+
+    // functions defined in this file
     static void prim_do(Evaluator* etor);
     static void prim_fun(Evaluator* etor);
     static void prim_if(Evaluator* etor);
     static void prim_let(Evaluator* etor);
+    static void prim_match(Evaluator* etor);
     static void prim_quote(Evaluator* etor);
-    static void prim_show(Evaluator* etor);
 
-    static void definePrim(const std::string& name, PrimFun primFun, Evaluator* etor) {
-        Primitive* prim = new Primitive(name, T_Prim, primFun);
-        etor->bind(new Identifier(name), prim);
-    }
-    
-    static void defineMacro(const std::string& name, PrimFun primFun, Evaluator* etor) {
-        Primitive* prim = new Primitive(name, T_PrimMacro, primFun);
-        etor->bind(new Identifier(name), prim);
-    }
-    
+    static void prim_io_disp(Evaluator* etor);
+    static void prim_io_show(Evaluator* etor);
+
+    static void prim_os_pwd(Evaluator* etor);
+
     void prim_defineAll(Evaluator* etor) {
-        definePrim("disp", prim_disp, etor);
         defineMacro("do", prim_do, etor);
         defineMacro("fun", prim_fun, etor);
         defineMacro("if", prim_if, etor);
         defineMacro("let", prim_let, etor);
+        defineMacro("match", prim_match, etor);
         defineMacro("quote", prim_quote, etor);
-        definePrim("show", prim_show, etor);
+
+        definePrim("dl:open", prim_dl_open, etor);
+
+        definePrim("io:disp", prim_io_disp, etor);
+        definePrim("io:show", prim_io_show, etor);
+
+        definePrim("os:pwd", prim_os_pwd, etor);
     }
 
     // primitives follow ---------------------------------------------
-
-    static void prim_disp(Evaluator* etor) {
-        List* args = (List*)etor->popObj();
-        while (!args->isEmpty()) {
-            args->_first->display(std::cout);
-            args = (List*)args->_rest;
-        }
-        etor->pushObj(new Nil());
-    }
 
     void doContin(Evaluator* etor, Any* arg, Continuation* contin) {
         etor->popObj();
@@ -79,6 +78,7 @@ namespace plx {
 
     static void prim_fun(Evaluator* etor) {
         List* parts = (List*)etor->popObj();
+        std::cout << "prim_fun parsts = " << parts << "\n";
         Any* firstPart = parts->_first;
         Identifier* name = nullptr;
         Triple* envTriple = etor->_env;
@@ -87,13 +87,26 @@ namespace plx {
             envTriple = etor->bind(name, new Nil());
             parts = (List*)parts->_rest;
         }
-        List* params = (List*)parts->_first;
-        List* body = (List*)parts->_rest;
-        Function* fun = new Function(params, body, envTriple);
-        if (name != nullptr) {
-            envTriple->_value = fun;
+        Function* funHead = nullptr;
+        Function* funNext = nullptr;
+        while (!parts->isEmpty()) {
+            List* part = (List*)parts->_first;
+            List* params = (List*)part->_first;
+            List* body = (List*)part->_rest;
+            Function* fun = new Function(params, body, envTriple);
+            if (funHead == nullptr) {
+                funHead = funNext = fun;
+            }
+            else {
+                funNext->_nextRule = fun;
+                funNext = fun;
+            }
+            parts = (List*)parts->_rest;
         }
-        etor->pushObj(fun);
+        if (name != nullptr) {
+            envTriple->_value = funHead;
+        }
+        etor->pushObj(funHead);
     }
 
     static void _ifContin(Evaluator* etor, Any* arg, Continuation* contin) {
@@ -142,18 +155,53 @@ namespace plx {
         }
     }
 
+    static void _matchContin(Evaluator* etor, Any* arg, Continuation* contin) {
+        (void)contin;
+        Any* lhs = arg;
+        Any* rhs = etor->popObj();
+        Triple* env = Any::Match(lhs, rhs, etor->_env);
+        Boolean* res = new Boolean(env != nullptr);
+        etor->pushObj(res);
+    }
+
+    static void prim_match(Evaluator* etor) {
+        List* parts = (List*)etor->popObj();
+        Any* lhs = parts->_first;
+        Any* rhs = ((List*)parts->_rest)->_first;
+        Continuation* contin = new Continuation("match", _matchContin, lhs);
+        etor->pushExpr(contin);
+        etor->pushExpr(rhs);
+    }
+
     static void prim_quote(Evaluator* etor) {
         (void)etor;
         // do nothing; leave the list of arguments on the object stack
     }
 
-    static void prim_show(Evaluator* etor) {
+    static void prim_io_disp(Evaluator* etor) {
+        List* args = (List*)etor->popObj();
+        while (!args->isEmpty()) {
+            args->_first->display(std::cout);
+            args = (List*)args->_rest;
+        }
+        etor->pushObj(new Nil());
+    }
+
+    static void prim_io_show(Evaluator* etor) {
         List* args = (List*)etor->popObj();
         while (!args->isEmpty()) {
             args->_first->show(std::cout);
             args = (List*)args->_rest;
         }
         etor->pushObj(new Nil());
+    }
+
+    static void prim_os_pwd(Evaluator* etor) {
+        List* args = (List*)etor->popObj();
+        (void)args;
+        char* pwd = realpath(".", NULL);
+        String* pwdString = new String(pwd);
+        etor->pushObj(pwdString);
     }
 
 }

@@ -2,13 +2,13 @@
 #include <iostream>
 #include <sstream>
 
-#include "src/any.h"
-#include "src/array.h"
-#include "src/evaluator.h"
-#include "src/list.h"
-#include "src/parser.h"
-#include "src/primitives.h"
-#include "src/repl.h"
+#include "any.h"
+#include "array.h"
+#include "evaluator.h"
+#include "list.h"
+#include "parser.h"
+#include "primitives.h"
+#include "repl.h"
 
 namespace plx {
 

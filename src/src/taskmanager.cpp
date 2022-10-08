@@ -1,6 +1,6 @@
-#include "src/evaluator.h"
-#include "src/queue.h"
-#include "src/taskmanager.h"
+#include "evaluator.h"
+#include "queue.h"
+#include "taskmanager.h"
 
 namespace plx {
 
@@ -15,9 +15,12 @@ namespace plx {
         _threads->enq(etor);
     }
 
-    void TaskManager::runThreads() {
+    void TaskManager::runThread() {
         std::cout << "TaskManager::runThreads called\n";
         // TODO do not pop the thread before running it. That will leave it ungrounded.
+    }
+    
+    void TaskManager::runThreads() {
     }
 
 }

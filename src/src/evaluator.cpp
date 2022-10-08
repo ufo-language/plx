@@ -1,11 +1,11 @@
 #include <cassert>
 
-#include "src/evaluator.h"
-#include "src/exceptionhandler.h"
+#include "evaluator.h"
+#include "exceptionhandler.h"
 #include "identifier.h"
-#include "src/list.h"
-#include "src/primitives.h"
-#include "src/triple.h"
+#include "list.h"
+#include "primitives.h"
+#include "triple.h"
 
 namespace plx {
 

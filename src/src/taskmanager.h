@@ -10,6 +10,7 @@ namespace plx {
         ~TaskManager();
         Queue* _threads;
         void addThread(Evaluator* etor);
+        void runThread();
         void runThreads();
     };
 

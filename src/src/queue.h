@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/any.h"
-#include "src/list.h"
+#include "any.h"
+#include "list.h"
 
 namespace plx {
 

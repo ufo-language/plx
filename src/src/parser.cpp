@@ -69,6 +69,17 @@ namespace plx {
         return new Identifier(name);    
     }
 
+    static bool _isSpecialChar(char c) {
+        static char specialChars[] = {'(', ')', '[', ']', '{', '}', '"', 0};
+        char* sc = specialChars;
+        do {
+            if (c == *sc) {
+                return true;
+            }
+        } while (*sc++);
+        return false;
+    }
+
     static void _parseException(const std::string& reason, Parser* parser, Evaluator* etor) {
         Triple* triple = parser->_expectedClose;
         Symbol* typeSymbol = new Symbol("Parser");
@@ -195,14 +206,14 @@ namespace plx {
     static void _parseSymbol(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
-        if (isalpha(c)) {
-            parser->_lexeme << c;
-        }
-        else {
+        if (isspace(c) || iscntrl(c) || _isSpecialChar(c)) {
             parser->_pos--;
             contin->_continFun = _parse;
             Any* token = _checkSymbol(parser->_lexeme.str());
             _addToken(parser, token);
+        }
+        else {
+            parser->_lexeme << c;
         }
         etor->pushExpr(contin);
     }
@@ -210,13 +221,7 @@ namespace plx {
     static void _parse(Evaluator* etor, Any* arg, Continuation* contin) {
         Parser* parser = (Parser*)arg;
         char c = parser->_inputString[parser->_pos++];
-        if (isalpha(c)) {
-            parser->_lexeme << c;
-            contin->_name = "parser:symbol";  // TODO after this all works, don't bother changing the name of the parser anywhere
-            contin->_continFun = _parseSymbol;
-            etor->pushExpr(contin);
-        }
-        else if (isdigit(c)) {
+        if (isdigit(c)) {
             parser->_iValue = c - '0';
             contin->_name = "parser:number";
             contin->_continFun = _parseNumber;
@@ -275,6 +280,12 @@ namespace plx {
                 Any* token = parser->_tokens->_first;
                 etor->pushObj(token);
             }
+        }
+        else {
+            parser->_lexeme << c;
+            contin->_name = "parser:symbol";  // TODO after this all works, don't bother changing the name of the parser anywhere
+            contin->_continFun = _parseSymbol;
+            etor->pushExpr(contin);
         }
     }
 

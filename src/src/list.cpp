@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include "src/array.h"
-#include "src/continuation.h"
-#include "src/evaluator.h"
-#include "src/list.h"
-#include "src/nil.h"
-#include "src/primitive.h"
-#include "src/symbol.h"
+#include "array.h"
+#include "continuation.h"
+#include "evaluator.h"
+#include "list.h"
+#include "nil.h"
+#include "primitive.h"
+#include "symbol.h"
 
 namespace plx {
 
@@ -39,9 +39,17 @@ namespace plx {
     }
 
     bool List::isEqual(Any* other) {
-        std::cout << "List::isEqual is incomplete\n";
-        (void)other;
-        return false;
+        List* otherList = (List*)other;
+        return Any::IsEqual(_first, otherList->_first) && Any::IsEqual(_rest, otherList->_rest);
+    }
+
+    Triple* List::match(Any* other, Triple* env) {
+        List* otherList = (List*)other;
+        env = Any::Match(_first, otherList->_first, env);
+        if (env == nullptr) {
+            return nullptr;
+        }
+        return Any::Match(_rest, otherList->_rest, env);
     }
 
     List* List::reverse() {

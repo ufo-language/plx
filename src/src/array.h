@@ -1,10 +1,12 @@
 #pragma once
 
-#include "src/any.h"
+#include "any.h"
 
 namespace plx {
 
+    struct Evaluator;
     struct Queue;
+    struct Triple;
 
     struct Array : public Any {
         static Array* fromQueue(Queue* q);
@@ -13,7 +15,8 @@ namespace plx {
         int _count;
         Any** _elems;
         bool boolValue() { return _count > 0; }
-        // TODO void evaluate(Evaluator* etor) override;
+        void evaluate(Evaluator* etor) override;
+        Triple* match(Any* other, Triple* env) override;
         void show(std::ostream& stream) override;
     };
 

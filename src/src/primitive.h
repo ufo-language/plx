@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "src/any.h"
+#include "any.h"
 
 namespace plx {
 
@@ -19,5 +19,8 @@ namespace plx {
         PrimFun _primFun;
         void show(std::ostream& stream) override;
     };
+
+    void definePrim(const std::string& name, PrimFun primFun, Evaluator* etor);
+    void defineMacro(const std::string& name, PrimFun primFun, Evaluator* etor);
 
 }

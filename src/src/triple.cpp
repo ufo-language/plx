@@ -1,4 +1,4 @@
-#include "src/triple.h"
+#include "triple.h"
 
 namespace plx {
 

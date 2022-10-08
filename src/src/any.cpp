@@ -1,7 +1,8 @@
-#include "src/any.h"
-#include "src/continuation.h"
-#include "src/evaluator.h"
-#include "src/triple.h"
+#include "any.h"
+#include "continuation.h"
+#include "evaluator.h"
+#include "symbol.h"
+#include "triple.h"
 
 namespace plx {
 
@@ -11,7 +12,7 @@ namespace plx {
 
     std::ostream& operator << (std::ostream &stream, Any* object) {
         if(object == nullptr) {
-            stream << "NULL-OBJECT";
+            stream << "(Any*)nullptr";
         }
         else {
             object->show(stream);
@@ -33,8 +34,21 @@ namespace plx {
         etor->pushObj(this);
     }
 
+    Triple* Any::Match(Any* self, Any* other, Triple* env) {
+        if (self == other) {
+            return env;
+        }
+        if (self->_typeId == T_Identifier) {
+            return ((Symbol*)self)->match(other, env);
+        }
+        if (self->_typeId == other->_typeId) {
+            return self->match(other, env);
+        }
+        return nullptr;
+    }
+
     Triple* Any::match(Any* other, Triple* env) {
-        return Any::IsEqual(this, other) ? env : nullptr;
+        return this->isEqual(other) ? env : nullptr;
     }
 
 }

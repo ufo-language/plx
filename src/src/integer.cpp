@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "src/integer.h"
+#include "integer.h"
 
 namespace plx {
 

@@ -3,12 +3,13 @@
 #include <iostream>
 #include <string>
 
-#include "src/memory.h"
+#include "memory.h"
 
 namespace plx {
 
     enum TypeId {
         T_NULL = 0,
+        T_Address,
         T_Apply,
         T_Array,
         T_Boolean,
@@ -54,6 +55,7 @@ namespace plx {
         virtual void evaluate(Evaluator* etor);
         static bool IsEqual(Any* self, Any* other);
         virtual bool isEqual(Any* other) { (void)other; return false; }
+        static Triple* Match(Any* self, Any* other, Triple* env);
         virtual Triple* match(Any* other, Triple* env);
         virtual void show(std::ostream& stream) = 0;
         friend std::ostream & operator<<(std::ostream &stream, Any* object);
