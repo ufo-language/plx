@@ -36,7 +36,7 @@ namespace plx {
     }
 
     void Queue::show(std::ostream& stream) {
-        _first->showWith(stream, "~[", "]");
+        stream << '~' << _first;
     }
 
 }

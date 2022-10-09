@@ -1,17 +1,15 @@
 #pragma once
 
-#include "any.h"
+#include "list.h"
 
 namespace plx {
 
     struct List;
 
-    struct Apply : public Any {
+    struct Apply : public List {
         const static char START_CHAR = '(';
         const static char STOP_CHAR = ')';
-        Apply(Any* abstr, List* args) : Any{T_Apply}, _abstr{abstr}, _args{args} {}
-        Any* _abstr;
-        List* _args;
+        Apply(Any* abstr, List* args) : List{T_Apply, abstr, args} {}
         void evaluate(Evaluator* etor) override;
         void show(std::ostream& stream) override;
     };

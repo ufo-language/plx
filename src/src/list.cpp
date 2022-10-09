@@ -63,10 +63,10 @@ namespace plx {
     }
 
     void List::show(std::ostream& stream) {
-        showWith(stream, "[", "]");
+        showWith(stream, START_CHAR, STOP_CHAR);
     }
 
-    void List::showWith(std::ostream& stream, const std::string& open, const std::string& close) {
+    void List::showWith(std::ostream& stream, char open, char close) {
         stream << open;
         List* list = this;
         bool _firstIter = true;

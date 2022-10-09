@@ -113,18 +113,13 @@ namespace plx {
     }
 
     void Apply::evaluate(Evaluator* etor) {
-        Continuation* contin = new Continuation("apply", _apply, _args);
+        Continuation* contin = new Continuation("apply", _apply, _rest);
         etor->pushExpr(contin);
-        etor->pushExpr(_abstr);
+        etor->pushExpr(_first);
     }
 
     void Apply::show(std::ostream& stream) {
-        stream << START_CHAR << _abstr;
-        if (!_args->isEmpty()) {
-            stream << ' ';
-            _args->showWith(stream, "", "");
-        }
-        stream << STOP_CHAR;
+        this->showWith(stream, START_CHAR, STOP_CHAR);
     }
 
 }
