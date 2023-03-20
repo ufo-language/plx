@@ -1,0 +1,1 @@
+gcc -shared -o libsqlite3.so -fPIC sqlite3.c

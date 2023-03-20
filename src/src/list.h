@@ -22,6 +22,7 @@ namespace plx {
         Triple* match(Any* other, Triple* env) override;
         List* reverse();
         void show(std::ostream& stream) override;
+        void showElems(std::ostream& stream);
         void showWith(std::ostream& stream, char open, char close);
     };
 

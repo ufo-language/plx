@@ -1,0 +1,6 @@
+
+# The .so file is not able to call any function in the static executable.
+# This will not work the way I want it to work.
+
+#gcc -c -fPIC sqlite3.c
+g++ -shared -o libsqlite3.so -fPIC sqlite.cpp ../primitive.cpp ../any.cpp sqlite3.o

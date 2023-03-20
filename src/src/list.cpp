@@ -66,8 +66,7 @@ namespace plx {
         showWith(stream, START_CHAR, STOP_CHAR);
     }
 
-    void List::showWith(std::ostream& stream, char open, char close) {
-        stream << open;
+    void List::showElems(std::ostream& stream) {
         List* list = this;
         bool _firstIter = true;
         while (!list->isEmpty()) {
@@ -86,6 +85,11 @@ namespace plx {
                 break;
             }
         }
+    }
+
+    void List::showWith(std::ostream& stream, char open, char close) {
+        stream << open;
+        showElems(stream);
         stream << close;
     }
 

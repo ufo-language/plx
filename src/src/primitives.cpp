@@ -78,7 +78,7 @@ namespace plx {
 
     static void prim_fun(Evaluator* etor) {
         List* parts = (List*)etor->popObj();
-        std::cout << "prim_fun parsts = " << parts << "\n";
+        std::cout << "prim_fun parts = " << parts << "\n";
         Any* firstPart = parts->_first;
         Identifier* name = nullptr;
         Triple* envTriple = etor->_env;

@@ -38,7 +38,9 @@ namespace plx {
             else {
                 stream << ' ';
             }
-            stream << '[' << fun->_params << ' ' << fun->_body << ']';
+            stream << '[' << fun->_params << ' ';
+            fun->_body->showElems(stream);
+            stream << ']';
             fun = fun->_nextRule;
         }
         stream << Apply::STOP_CHAR;
